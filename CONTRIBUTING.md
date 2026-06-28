@@ -60,6 +60,7 @@ These are enforced — PRs that break them will be asked to change.
 - After merges to `main`, release-please opens/updates a **Release PR** that accumulates changes
   and the `CHANGELOG`. Merging that Release PR cuts the release: tag, GitHub Release, plugin
   `.zip`, and `npm publish`.
+- Full reference: [`docs/releasing.md`](docs/releasing.md).
 
 ## Before opening a PR
 
