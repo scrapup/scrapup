@@ -1,6 +1,6 @@
 {
   "name": "@scrapup/scrapup",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An open, AI-assisted Unified Process for engineering teams — from informational scrap to forged, auditable delivery (intent → spec → code → test → commit → release).",
   "homepage": "https://scrapup.dev",
   "repository": {
