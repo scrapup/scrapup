@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "scrapup",
+  "description": "Marketplace for scrapup — an open, AI-assisted Unified Process for engineering teams.",
+  "owner": {
+    "name": "Marco Antonio Luqueti Faustino"
+  },
+  "metadata": {
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "scrapup",
+      "source": "./",
+      "description": "An open, AI-assisted Unified Process for engineering teams — from informational scrap to forged, auditable delivery (intent → spec → code → test → commit → release).",
+      "category": "workflow",
+      "license": "MIT",
+      "homepage": "https://scrapup.dev"
+    }
+  ]
+}

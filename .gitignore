@@ -1,0 +1,10 @@
+# Local, non-versioned directory (operational notes, secrets, private docs)
+.local/
+
+# Environment
+.env
+.env.local
+
+# System
+.DS_Store
+.serena
