@@ -1,5 +1,7 @@
 # scrapup
 
+🌐 **English** | [日本語](./README.ja.md) | [Português](./README.pt.md)
+
 > From informational scrap to forged delivery — software built by an **AI-assisted Unified Process**.
 
 **scrapup** is an ecosystem of *skills*, *agents*, and *commands* for [Claude Code](https://claude.com/claude-code) that operationalizes the **document → validate → deliver** cycle with engineering rigor. The name carries the project's thesis: raising (*up*) raw material (*scrap*) into delivered software, through a modernized, agent-assisted **Unified Process (UP)** — where the developer is repositioned from **executor** to **architect and validator**, while agents run the engineering workflows.
@@ -25,7 +27,7 @@ Because execution becomes cheap and automated, the leverage shifts to the **cont
 
 ## Status
 
-**Beta — first public release.** The ecosystem is being consolidated in this repository from prior work. The structure and artifact catalog will be published incrementally.
+**Beta — first public release.** scrapup is configured as an installable Claude Code plugin; the ecosystem is being consolidated here from prior work, and the artifact catalog grows incrementally. Published so far: the `communication` skill (`skills/foundations/communication`) — the output register and form doctrine for every Unified Process stakeholder.
 
 ## Installation
 
