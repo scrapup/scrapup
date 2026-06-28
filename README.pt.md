@@ -33,6 +33,16 @@ Como a execução se torna barata e automatizada, a alavancagem migra para os **
 
 > Requer o [Claude Code](https://claude.com/claude-code).
 
+**Via npm** — instala o pacote `@scrapup/scrapup` e o registra como plugin do Claude Code:
+
+```bash
+npm install -g @scrapup/scrapup
+# Um passo de postinstall registra o plugin (requer o CLI `claude` no PATH).
+# Rode /reload-plugins no Claude Code (ou reinicie a sessão) para carregá-lo.
+```
+
+**Via marketplace de plugins:**
+
 ```bash
 /plugin marketplace add scrapup/scrapup
 /plugin install scrapup

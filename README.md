@@ -33,6 +33,16 @@ Because execution becomes cheap and automated, the leverage shifts to the **cont
 
 > Requires [Claude Code](https://claude.com/claude-code).
 
+**Via npm** — installs the `@scrapup/scrapup` package and registers it as a Claude Code plugin:
+
+```bash
+npm install -g @scrapup/scrapup
+# A postinstall step registers the plugin (requires the `claude` CLI on PATH).
+# Run /reload-plugins in Claude Code (or restart the session) to load it.
+```
+
+**Via the plugin marketplace:**
+
 ```bash
 /plugin marketplace add scrapup/scrapup
 /plugin install scrapup
