@@ -1,0 +1,39 @@
+{
+  "name": "@scrapup/scrapup",
+  "version": "0.1.0",
+  "description": "An open, AI-assisted Unified Process for engineering teams — from informational scrap to forged, auditable delivery (intent → spec → code → test → commit → release).",
+  "homepage": "https://scrapup.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scrapup/scrapup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/scrapup/scrapup/issues"
+  },
+  "author": "Marco Antonio Luqueti Faustino",
+  "license": "MIT",
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "agents",
+    "commands",
+    "README.md",
+    "README.pt.md",
+    "README.ja.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "unified-process",
+    "sdd",
+    "spec-driven-development",
+    "ai-assisted",
+    "code-review",
+    "multi-lens-validation",
+    "agents",
+    "skills"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
