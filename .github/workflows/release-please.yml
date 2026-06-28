@@ -1,0 +1,51 @@
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write # required for npm provenance
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Open/update the Release PR (bumps package.json + plugin.json + CHANGELOG)
+      #    and, once that PR is merged, create the tag and the GitHub Release.
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # The steps below run only when a Release was just created (Release PR merged).
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+
+      # 2. Package the importable plugin .zip (see scripts/build-plugin-zip.sh).
+      - name: Build plugin zip
+        if: ${{ steps.release.outputs.release_created }}
+        run: bash scripts/build-plugin-zip.sh "${{ steps.release.outputs.tag_name }}"
+
+      # 3. Attach the .zip as a Release asset.
+      - name: Attach zip to the GitHub Release
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: gh release upload "$TAG" "scrapup-${TAG}.zip" --clobber
+
+      # 4. Publish to npm.
+      - uses: actions/setup-node@v4
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - run: npm publish
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
