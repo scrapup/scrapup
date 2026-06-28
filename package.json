@@ -12,11 +12,18 @@
   },
   "author": "Marco Antonio Luqueti Faustino",
   "license": "MIT",
+  "bin": {
+    "scrapup": "scripts/postinstall.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
   "files": [
     ".claude-plugin",
     "skills",
     "agents",
     "commands",
+    "scripts/postinstall.js",
     "README.md",
     "README.pt.md",
     "README.ja.md",
