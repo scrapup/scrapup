@@ -1,0 +1,25 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "scrapup",
+  "version": "0.1.0",
+  "description": "An open, AI-assisted Unified Process for engineering teams — from informational scrap to forged, auditable delivery (intent → spec → code → test → commit → release).",
+  "author": {
+    "name": "Marco Antonio Luqueti Faustino"
+  },
+  "homepage": "https://scrapup.dev",
+  "repository": "https://github.com/scrapup/scrapup",
+  "license": "MIT",
+  "skills": [
+    "./skills/foundations"
+  ],
+  "keywords": [
+    "unified-process",
+    "sdd",
+    "spec-driven-development",
+    "ai-assisted",
+    "code-review",
+    "multi-lens-validation",
+    "agents",
+    "skills"
+  ]
+}
