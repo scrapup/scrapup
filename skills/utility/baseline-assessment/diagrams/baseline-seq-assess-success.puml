@@ -1,0 +1,101 @@
+@startuml
+title Sequencia - assess com readiness completo
+
+actor "scrapup-forge" as forge
+participant "baseline-check.sh\n(dispatcher)" as disp
+participant "check-environment.sh" as env
+participant "enable-docker-server" as dock
+participant "setup-node-env" as node
+participant "detect-runner.sh" as detect
+participant "classify-project.sh" as classify
+participant "assess-core.sh" as core
+participant "saga-client" as client
+participant "mcp-saga" as saga
+participant "Projeto Node/TS" as proj
+
+forge -> disp: baseline-check.sh assess [--workspace <ws>]
+disp -> core: invocar
+
+core -> env: verificar readiness
+alt Projeto depende de Docker
+    env -> dock: enable-docker.sh start
+    dock --> env: exit 0 (Docker OK) ou exit 1 (partial)
+end
+env -> node: detect-node-version + nvm-install-use
+node --> env: versao ativa ou exit code
+env -> node: check-npm-token
+node --> env: token disponivel ou solicitado ao utilizador
+env -> node: npm-install
+node --> env: dependencias instaladas ou exit code
+env --> core: environment_state = ready | partial | blocked
+
+alt environment_state = blocked
+    core -> client: note_save(environment-state)
+    client -> saga: persist
+    core --> disp: { status: blocked, environment_state, reason }
+    disp --> forge: exit 1
+else environment_state = ready ou partial
+    core -> client: project_list(filter=test-config:{repo})
+    client -> saga: project_list (ou saga_project_ensure)
+    saga --> client: projeto
+    client --> core: estado anterior (ou vazio)
+
+    alt Cache valido (manifest_hash bate)
+        core -> client: note_list(test-scripts, baseline-category, baseline-current, baseline-latest)
+        client -> saga: note_list
+        saga --> client: notas atuais
+        client --> core: cache completo
+        core --> disp: { status: cached, environment_state, category, category_effective (recomputada), baseline_current, baseline_latest }
+    else Cache invalido ou inexistente
+        core -> detect: invocar
+        detect -> proj: ler package.json, configs, node_modules
+        proj --> detect: manifestos e arquivos
+        detect --> core: { runner, linter, build, typecheck, monorepo_info, manifest_hash }
+
+        core -> classify: invocar com sinais + environment_state
+        classify -> proj: runner --listTests (modo seco)
+        proj --> classify: lista de testes ou erro
+        classify -> proj: verificar docker-compose.yml e scripts
+        proj --> classify: presenca e sinais
+        classify --> core: { category, observations }
+
+        alt category = indefinido (sinais contraditorios)
+            core -> client: note_save(test-scripts, baseline-category com category=indefinido, observations)
+            client -> saga: persist
+            core --> disp: { status: blocked-classification, category: indefinido, category_effective: null, recommendations }
+            disp --> forge: exit 1 (requer classify confirm)
+        else Categoria resolvida
+            note over core
+                category_effective e recomputada
+                a partir de category + environment_state
+                (nunca persistida)
+            end note
+
+            alt Categoria efetiva permite execucao completa
+                core -> proj: executar suite completa
+                proj --> core: resultado (verde ou com vermelhos conhecidos)
+
+                core -> client: note_save(test-scripts + manifest_hash)
+                core -> client: note_save(baseline-category)
+                core -> client: note_save(environment-state)
+                core -> client: note_save(baseline-latest com tests_previously_red e tests_previously_green)
+
+                alt Suite completamente verde
+                    core -> client: note_save(baseline-current)
+                end
+                core -> client: note_save(metrics:run:{timestamp})
+                client -> saga: persist batch
+                saga --> client: ok
+                core --> disp: { status: green ou red-known, environment_state, category, baseline_current?, baseline_latest }
+            else Categoria efetiva nao permite execucao local
+                core -> client: note_save(test-scripts, baseline-category, environment-state, observations)
+                client -> saga: persist batch
+                saga --> client: ok
+                core --> disp: { status: no-execution, environment_state, category, reason }
+            end
+        end
+    end
+
+    disp --> forge: JSON estruturado + exit 0
+end
+@enduml

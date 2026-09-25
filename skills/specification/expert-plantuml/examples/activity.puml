@@ -1,0 +1,18 @@
+@startuml
+start
+:ler config;
+if (config valida?) then (sim)
+  :processar dados;
+  fork
+    :acao 1;
+  fork again
+    :acao 2;
+  end fork
+  :consolidar;
+else (nao)
+  :logar erro;
+  stop
+endif
+:enviar resultado;
+stop
+@enduml

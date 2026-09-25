@@ -1,0 +1,91 @@
+@startuml
+title Sequencia - verify-diff com distincao regressao vs falha pre-existente
+
+actor "scrapup-forge" as forge
+participant "baseline-check.sh\n(dispatcher)" as disp
+participant "verify-diff.sh" as verify
+participant "check-environment.sh" as env
+participant "compare-baseline.sh" as compare
+participant "saga-client" as client
+participant "mcp-saga" as saga
+participant "cache-local" as cache
+participant "Projeto Node/TS" as proj
+
+forge -> disp: baseline-check.sh verify-diff --scope=<staged|commit|push>
+disp -> verify: invocar
+
+verify -> env: reavaliar environment_state
+env --> verify: ready | partial | blocked
+
+alt environment_state = blocked
+    verify --> disp: { gate_decision: warn, reason: environment-blocked, observations }
+    disp --> forge: exit 2
+else environment_state = ready ou partial
+    verify -> client: note_list(baseline-current, baseline-latest, baseline-category, test-scripts)
+    client -> saga: note_list
+    alt Saga disponivel
+        saga --> client: notas atuais
+        client --> verify: estado atual
+    else Saga offline
+        saga --> client: erro / timeout
+        client -> cache: ler estado local
+        cache --> client: estado espelhado
+        client --> verify: estado atual + observacao fallback
+    end
+
+    note over verify
+        baseline_source = baseline-current se existe;
+        senao baseline-latest; senao none (warn)
+    end note
+
+    verify -> proj: git diff --name-only (scope determina range)
+    proj --> verify: lista de arquivos
+
+    alt Categoria efetiva permite execucao local
+        verify -> proj: lint nos arquivos alterados
+        proj --> verify: resultado lint
+        verify -> proj: descobrir testes impactados por mapeamento
+        proj --> verify: testes impactados
+        verify -> proj: executar testes impactados (primeiro passe sem --bail)
+        proj --> verify: resultado dos testes
+
+        alt Coverage tool disponivel
+            verify -> proj: coverage restrito a arquivos alterados
+            proj --> verify: coverage do diff
+        else Coverage tool ausente
+            note right of verify: observacao: coverage-tool-absent
+        end
+
+        verify -> compare: comparar resultado corrente com baseline_source
+        compare --> verify: { tests_previously_green_now_red, tests_previously_red_still_red, tests_previously_red_now_green, lint_errors_delta, coverage_global_delta }
+
+        alt tests_previously_green_now_red nao-vazio OU novos erros de lint OU coverage do diff abaixo da meta (saudavel)
+            verify -> client: note_save(metrics:run com outcome=red-regression)
+            verify --> disp: { gate_decision: fail, reasons, diff_summary, baseline_comparison }
+            disp --> forge: exit 1
+        else tests_previously_red_still_red nao-vazio e sem regressao nova
+            verify -> client: note_save(metrics:run com outcome=pre-existing-red)
+            verify --> disp: { gate_decision: warn, reasons: pre-existing, baseline_comparison }
+            disp --> forge: exit 2
+        else Flaky observado (testes instaveis em reexecucao)
+            verify -> client: note_save(metrics:run com outcome=flaky-observed)
+            verify --> disp: { gate_decision: warn, reasons: flaky, flaky_observed }
+            disp --> forge: exit 2
+        else baseline_source = none (primeira execucao sem baseline)
+            verify -> client: note_save(metrics:run com outcome=no-baseline)
+            verify --> disp: { gate_decision: warn, reasons: no-green-baseline-yet }
+            disp --> forge: exit 2
+        else Tudo OK
+            verify -> client: note_save(metrics:run com outcome=green)
+            verify --> disp: { gate_decision: pass }
+            disp --> forge: exit 0
+        end
+    else Categoria efetiva = legado-critico ou sem-infra
+        verify -> proj: lint apenas nos arquivos alterados (se houver linter)
+        proj --> verify: resultado lint
+        verify -> client: note_save(metrics:run com outcome=lint-only)
+        verify --> disp: { gate_decision: pass ou warn, note: testes ficam para CI remoto }
+        disp --> forge: exit 0 ou 2
+    end
+end
+@enduml

@@ -1,0 +1,13 @@
+{
+  "name": "legado-docker-dependent",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "docker compose up -d && jest --runInBand",
+    "test:setup": "docker-compose -f docker-compose.test.yml up",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0"
+  }
+}

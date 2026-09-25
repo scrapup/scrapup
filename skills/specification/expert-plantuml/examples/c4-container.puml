@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+
+Person(admin, "Administrador")
+System_Boundary(c1, "Sistema Exemplo") {
+    Container(web_app, "Web Application", "C#, ASP.NET Core", "Interface principal")
+    Container(api, "API", "Node.js", "Regras de negocio")
+}
+System(twitter, "Twitter")
+
+Rel(admin, web_app, "Uses", "HTTPS")
+Rel(web_app, api, "Chama", "HTTP")
+Rel(api, twitter, "Obtem dados", "HTTPS")
+@enduml

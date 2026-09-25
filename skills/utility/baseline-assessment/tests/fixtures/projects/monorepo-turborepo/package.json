@@ -1,0 +1,13 @@
+{
+  "name": "monorepo-turborepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "test": "turbo run test",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.0"
+  }
+}

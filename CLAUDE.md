@@ -54,7 +54,7 @@ The ecosystem (more skills, agents, commands, MCP servers, diagrams) is still be
 
 **Convergence with the current ecosystem.** Strong in the **middle** (Construction + multi-lens verification), thin at the **ends** (Inception/Transition) and on the **risk-driven** axis — where UP still has the most to teach. Already surpasses UP in: parallel multi-lens quality review, clean-context iteration (resolves *context rot*, inconceivable pre-LLM), roles as dispatchable agents, lean tailoring, and open tooling.
 
-**Roadmap.** Prioritized improvements toward the vision: (1) per-task risk field + risk-ordered iterations; (2) executable-baseline / skeleton gate between plan and implementation; (3) Transition via telemetry (verify features in prod post-merge); (4) formal milestone gates (LCO/LCA/IOC/Release); (5) traceability matrix (use case ↔ task ↔ test ↔ commit); (6) Inception `brief.md` bundle (vision, feature/risk/use-case lists, NFRs, candidate architecture, business case); (9) ADR artifact in Elaboration. First materialized step: the `scrapforge-inception` skill producing `brief.md` in validated layers, gated by the `reviewer-process-lco` agent.
+**Roadmap.** Prioritized improvements toward the vision: (1) per-task risk field + risk-ordered iterations; (2) executable-baseline / skeleton gate between plan and implementation; (3) Transition via telemetry (verify features in prod post-merge); (4) formal milestone gates (LCO/LCA/IOC/Release); (5) traceability matrix (use case ↔ task ↔ test ↔ commit); (6) Inception `brief.md` bundle (vision, feature/risk/use-case lists, NFRs, candidate architecture, business case); (9) ADR artifact in Elaboration. First materialized step: the `scrapup-inception` skill producing `brief.md` in validated layers, gated by the `reviewer-process-lco` agent.
 
 **Boundary cautions.** Do not reintroduce RUP weight — the lean incremental flow is the differentiator; heavyweight artifacts apply only to the full flow (≥5 tasks / high impact), never to small increments. Risk-driven means *ordering execution*, not a risk-management bureaucracy. Co-evolve process and tooling together; do not stack many innovations at once.
 
@@ -86,4 +86,4 @@ Full reference — moving parts, prerequisites (secrets/settings), and maintaine
 
 ## Origin
 
-Public release derived from the internal "scrapforge" ecosystem. Branding, license (MIT), and identity decisions (GitHub org `scrapup`, domain `scrapup.dev`) are recorded in `.local/docs/` (not versioned).
+Public release derived from the internal "scrapup" ecosystem. Branding, license (MIT), and identity decisions (GitHub org `scrapup`, domain `scrapup.dev`) are recorded in `.local/docs/` (not versioned).

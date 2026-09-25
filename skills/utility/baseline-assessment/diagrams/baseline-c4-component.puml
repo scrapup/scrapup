@@ -1,0 +1,80 @@
+@startuml
+!include <C4/C4_Component>
+title baseline-assessment - C4 Nivel 3 (Componentes internos)
+
+Container_Boundary(baseline, "baseline-assessment") {
+    Component(skill, "SKILL.md", "Documentacao executavel", "Define modos publicos e administrativos, contratos de saida, tabela de categorias e integracoes")
+    Component(dispatcher, "baseline-check.sh", "Dispatcher shell", "Entry point: parseia modo e delega ao script especializado. Modos: assess, verify-diff, report, override, classify")
+
+    package "Modos operacionais" as ops {
+        Component(assess_core, "assess-core.sh", "Script de assess", "Orquestra readiness, descoberta, classificacao, execucao da suite e persistencia de baseline-current e baseline-latest")
+        Component(verify, "verify-diff.sh", "Script de verificacao incremental", "Lista diff, executa gate calibrado a categoria efetiva, compara com baseline-current ou baseline-latest")
+        Component(report, "report.sh", "Script de leitura", "Le estado persistido e retorna JSON sem executar nada")
+    }
+
+    package "Modos administrativos" as admin {
+        Component(override_cmd, "override.sh", "Comando admin", "Subcomandos set e remove para overrides de scripts; valida TTL, motivo, escopo de workspace")
+        Component(classify_cmd, "classify.sh", "Comando admin", "Subcomando confirm para resolver classificacao indefinido com categoria escolhida pelo desenvolvedor")
+    }
+
+    package "Helpers (scripts/lib/)" as lib {
+        Component(env_check, "check-environment.sh", "Orquestrador de readiness", "Delega a enable-docker-server e setup-node-env, consolida environment_state")
+        Component(detect, "detect-runner.sh", "Script de descoberta", "Identifica runner, linter, build, type-check, workspace em monorepo")
+        Component(classify, "classify-project.sh", "Script de classificacao", "Aplica regras de decisao; atribui uma das 5 categorias; retorna indefinido quando sinais contraditorios")
+        Component(effective_cat, "effective-category.sh", "Helper puro", "Recomputa category_effective a partir de category persistida + environment_state corrente (nunca persiste)")
+        Component(workspace_det, "workspace-detect.sh", "Helper de monorepo", "Detecta workspaces e escopa notes via prefixo ws:{path}:")
+        Component(compare, "compare-baseline.sh", "Helper puro", "Compara resultado corrente com baseline-current e baseline-latest; calcula tests_previously_red_still_red e tests_previously_green_now_red")
+    }
+
+    package "Persistencia" as persist {
+        Component(saga_client, "saga-client", "Wrapper CLI mcp-saga", "Encapsula project_create, note_save, note_list e note_search; respeita workspace scoping")
+        Component(cache_local, "cache-local", "Cache em disco", "Fallback quando saga esta offline; espelha ultimo estado conhecido por repo e workspace")
+    }
+}
+
+Container_Ext(docker_skill, "enable-docker-server", "Skill externa no plugin")
+Container_Ext(node_skill, "setup-node-env", "Skill externa no plugin")
+Container_Ext(project, "Projeto Node/TS", "Leitura de manifestos, configs e codigo-fonte")
+Container_Ext(saga, "mcp-saga", "Estado persistente canonico")
+
+Rel(dispatcher, assess_core, "Modo assess")
+Rel(dispatcher, verify, "Modo verify-diff")
+Rel(dispatcher, report, "Modo report")
+Rel(dispatcher, override_cmd, "Modo override")
+Rel(dispatcher, classify_cmd, "Modo classify")
+
+Rel(assess_core, env_check, "Verifica readiness antes de descobrir ferramental")
+Rel(env_check, docker_skill, "Delega verificacao/start do Docker")
+Rel(env_check, node_skill, "Delega Node, nvm, NPM_TOKEN, npm install")
+Rel(env_check, saga_client, "Persiste environment-state")
+
+Rel(assess_core, workspace_det, "Detecta workspace(s) afetado(s)")
+Rel(assess_core, detect, "Executa apos environment_state ready ou partial")
+Rel(assess_core, classify, "Executa apos descoberta")
+Rel(assess_core, effective_cat, "Recomputa category_effective")
+Rel(detect, project, "Le package.json, configs, node_modules")
+Rel(classify, project, "Executa runners em modo seco para sondagem")
+Rel(assess_core, project, "Executa suite completa quando a categoria efetiva permite")
+Rel(assess_core, saga_client, "Persiste category, test-scripts, baseline-current (se verde) e baseline-latest (sempre)")
+
+Rel(verify, env_check, "Reavalia environment_state corrente")
+Rel(verify, workspace_det, "Identifica workspace do diff")
+Rel(verify, effective_cat, "Recomputa category_effective")
+Rel(verify, project, "Lista diff via git, roda lint e testes impactados conforme categoria efetiva")
+Rel(verify, saga_client, "Le baseline-current e baseline-latest")
+Rel(verify, compare, "Compara resultado corrente com baselines")
+Rel(verify, cache_local, "Fallback de leitura quando saga indisponivel")
+
+Rel(report, workspace_det, "Identifica workspace quando aplicavel")
+Rel(report, effective_cat, "Recomputa category_effective mesmo em leitura")
+Rel(report, saga_client, "Le estado atual")
+Rel(report, cache_local, "Fallback de leitura quando saga indisponivel")
+
+Rel(override_cmd, saga_client, "Grava baseline-overrides com TTL")
+Rel(classify_cmd, saga_client, "Grava category-confirmation")
+
+Rel(saga_client, saga, "Comandos de persistencia e consulta")
+Rel(saga_client, cache_local, "Espelha escritas para resiliencia")
+
+LAYOUT_WITH_LEGEND()
+@enduml

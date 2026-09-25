@@ -1,0 +1,24 @@
+@startuml
+actor Cliente
+participant "API Gateway" as gw
+participant "Controller" as ctrl
+participant "UseCase" as uc
+participant "MongoDB" as db
+participant "RabbitMQ" as mq
+
+Cliente -> gw: POST /api/v1/recurso
+gw -> ctrl: Valida DTO
+ctrl -> uc: Executa logica
+uc -> db: Persiste dados
+
+alt Sucesso
+    db --> uc: OK
+    uc -> mq: Publica evento (try/catch)
+    uc --> ctrl: Resultado
+    ctrl --> gw: 201 Created
+else Falha no banco
+    db --> uc: Erro
+    uc --> ctrl: Erro tratado
+    ctrl --> gw: 503 Service Unavailable
+end
+@enduml

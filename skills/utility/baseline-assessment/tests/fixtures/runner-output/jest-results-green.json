@@ -1,0 +1,21 @@
+{
+  "numTotalTests": 3,
+  "numPassedTests": 3,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "testResults": [
+    {
+      "name": "/tmp/proj/src/payment.service.spec.ts",
+      "assertionResults": [
+        {"fullName": "PaymentService calculates total", "status": "passed"},
+        {"fullName": "PaymentService handles zero", "status": "passed"}
+      ]
+    },
+    {
+      "name": "/tmp/proj/src/user.service.spec.ts",
+      "assertionResults": [
+        {"fullName": "UserService finds by id", "status": "passed"}
+      ]
+    }
+  ]
+}
