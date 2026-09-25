@@ -27,7 +27,7 @@ Because execution becomes cheap and automated, the leverage shifts to the **cont
 
 ## Status
 
-**Beta — first public release.** scrapup is configured as an installable Claude Code plugin; the ecosystem is being consolidated here from prior work, and the artifact catalog grows incrementally. Published so far: the `communication` skill (`skills/foundations/communication`) — the output register and form doctrine for every Unified Process stakeholder.
+**Beta — first public release.** scrapup is configured as an installable Claude Code plugin; the ecosystem is being consolidated here from prior work, and the artifact catalog grows incrementally. Published so far: the `communication` skill (`skills/communication`) — the output register and form doctrine for every Unified Process stakeholder.
 
 ## Installation
 

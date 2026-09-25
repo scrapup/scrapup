@@ -1,0 +1,199 @@
+@startuml blueprint-flow
+title Spec-Driven Development (SDD) Flow — Full Cycle
+
+<style>
+  diamond {
+    BackgroundColor #FFFDE7
+    LineColor #F9A825
+  }
+</style>
+
+start
+
+partition "0. Entry Point" #ECEFF1 {
+  :new demand received;
+
+  if (SDD artifacts\nexist in the workspace?\n(tasks.md, single-tasks.md,\nspec.md, plan.md)) then (yes)
+    :use existing artifacts;
+    #C8E6C9:skip to **Triage**;
+  else (no)
+    #F3E5F5:no SDD artifacts —\nstart **Artifact Production**;
+  endif
+}
+
+partition "1. Artifact Production (no prior SDD)" #F3E5F5 {
+  :explore intent and scope\nwith the user\n(skill **brainstorming**);
+
+  :analyze workspace:\ncode, configs, schemas,\nroutes, modules, tests;
+
+  :refinement_cycle = 0;
+
+  repeat
+    if (enough\ninformation?) then (yes)
+    else (no)
+      :list 3–5 objective\nquestions to the user; <<#FFF9C4>>
+      :wait for the answer;
+    endif
+    :refinement_cycle++;
+  repeat while (insufficient information\nAND cycle <= 20?) is (continue) not (stop)
+
+  if (cycle > 20\nAND information still\ninsufficient?) then (yes)
+    #FFCDD2:tell the user:\ninsufficient information\nto generate artifacts;
+    stop
+  else (no)
+  endif
+}
+
+partition "2. Impact Triage" #E3F2FD {
+  if (low impact,\nfew files,\n<= 5 Tasks?) then (yes)
+    #C8E6C9:**incremental** flow\n(single-tasks.md);
+  else (no\nor > 5 TF)
+    #E8EAF6:**full** flow\n(spec → plan → tasks.md);
+  endif
+}
+
+if (flow?) then (incremental)
+
+partition "3i. Incremental Flow — single-tasks.md" #E8F5E9 {
+  :confirm the fit:\nlow impact, few files,\nat most 5 TF;
+
+  :minimal discovery:\nclarify only\nblocking doubts; <<#FFF9C4>>
+
+  if (single-tasks.md\nalready exists?) then (yes)
+    :add new TF\nwith sequential ID;
+  else (no)
+    :create single-tasks.md\n(US + TF templates;\nspecification in the TFs;\nno spec.md / plan.md);
+  endif
+
+  :new US? ask the user\nfor the first User Story ID; <<#FFF9C4>>
+
+  :write each TF **self-contained**:\ntouched files, criteria,\nDoD, Execution Guidance;
+
+  :PlantUML diagrams\nonly if needed\n(reduce ambiguity);
+
+  if (count of\nTF- blocks > 5?) then (yes)
+    #FFCDD2:incremental limit exceeded!\nRequire the **full flow**\n(spec + plan + tasks.md);
+    stop
+  else (no)
+  endif
+
+  :present single-tasks.md\nto the user; <<#FFF9C4>>
+
+  repeat
+    if (user\napproves?) then (yes)
+    else (no)
+      :revise per feedback;
+    endif
+  repeat while (not approved?) is (yes) not (approved)
+
+  #C8E6C9:single-tasks.md approved;
+}
+
+else (full)
+
+partition "3c-1. Phase 1 — spec.md (What and Why)" #E8EAF6 {
+  note right
+    **Focus:** business intent.
+    **FORBIDDEN:** mentioning databases,
+    languages, frameworks or libraries.
+    Technology belongs to Phase 2.
+  end note
+
+  if (enough information\nfor every section?) then (yes)
+  else (no)
+    :ask 3–5 objective\nquestions to the user\n(edge cases, business\nrules, SLAs, volume); <<#FFF9C4>>
+    :wait for the answer;
+  endif
+
+  :fill the spec.md template:\n— overview and goal\n— user journeys\n— business rules and constraints\n— edge cases (Zero Trust)\n— success criteria and SLAs;
+
+  :present spec.md\nto the user; <<#FFF9C4>>
+
+  repeat
+    if (user\napproves?) then (yes)
+    else (no)
+      :revise per feedback;
+    endif
+  repeat while (spec.md\nnot approved?) is (yes) not (approved)
+
+  #C8E6C9:spec.md approved;
+}
+
+partition "3c-2. Phase 2 — plan.md (How)" #FFF3E0 {
+  :check prerequisites:\napproved spec.md,\nvolume and SLAs defined;
+
+  if (volume or SLAs\nmissing?) then (yes)
+    :ask the user\nbefore choosing a\nsynchronous vs asynchronous approach; <<#FFF9C4>>
+  else (no)
+  endif
+
+  if (enough information\nfor the architecture?) then (yes)
+  else (no)
+    :ask 3–5 questions\nabout bottlenecks, integrations,\nnon-functional requirements; <<#FFF9C4>>
+    :wait for the answer;
+  endif
+
+  :generate PlantUML diagrams\n(skill **expert-plantuml**):\n— C4 L2 (Containers)\n— C4 L3 (Components)\n— Sequence (success + failure)\n— Envelope/Traceability\n   (if there is a queue);
+
+  :fill the plan.md template:\n— architecture overview\n— solution diagrams\n— data modeling and schemas\n— IDL contracts (OpenAPI/AsyncAPI)\n— resilience and errors\n— metrics, logs and traces\n— rationale and trade-offs;
+
+  :present plan.md\nto the user; <<#FFF9C4>>
+
+  repeat
+    if (user\napproves?) then (yes)
+    else (no)
+      :revise per feedback;
+    endif
+  repeat while (plan.md\nnot approved?) is (yes) not (approved)
+
+  #C8E6C9:plan.md approved;
+}
+
+partition "3c-3. Phase 3 — tasks.md (Atomic Execution)" #FCE4EC {
+  :check prerequisites:\napproved plan.md with\nDTOs and schemas defined;
+
+  :define User Stories\n(value deliverables);
+
+  :ask the user for the\nfirst User Story ID; <<#FFF9C4>>
+
+  :include per-US diagrams proportional to scope:\nC4 L2 + Sequence when multi-container,\nnon-trivial failure or messaging;\nsingle-flow US: Sequence only\n(reuse/adapt from plan.md,\nskill **expert-plantuml**);
+
+  :sequence Tasks\ntopologically\n(schemas/DB → connectors →\nuse cases → controllers);
+
+  :generate each Task:\nfull template with\nDoD and Execution Guidance;
+
+  :present tasks.md\nto the user; <<#FFF9C4>>
+
+  repeat
+    if (user\napproves?) then (yes)
+    else (no)
+      :revise per feedback;
+    endif
+  repeat while (tasks.md\nnot approved?) is (yes) not (approved)
+
+  #C8E6C9:tasks.md approved;
+}
+
+endif
+
+partition "4. Artifacts Ready" #C8E6C9 {
+  :SDD artifacts approved\nby the user;
+
+  :ready for implementation\n(skill **forge**);
+}
+
+stop
+
+legend right
+  |= Color |= Step |
+  | <#ECEFF1> | 0. Entry Point |
+  | <#F3E5F5> | 1. Artifact Production |
+  | <#E3F2FD> | 2. Impact Triage |
+  | <#E8F5E9> | 3i. Incremental (single-tasks.md) |
+  | <#E8EAF6> | 3c-1. Phase 1 — spec.md |
+  | <#FFF3E0> | 3c-2. Phase 2 — plan.md |
+  | <#FCE4EC> | 3c-3. Phase 3 — tasks.md |
+  | <#C8E6C9> | 4. Artifacts Ready |
+endlegend
+
+@enduml

@@ -10,11 +10,7 @@
   "repository": "https://github.com/scrapup/scrapup",
   "license": "MIT",
   "skills": [
-    "./skills/foundations",
-    "./skills/superpowers",
-    "scrapup/skills/delivery",
-    "scrapup/skills/specification",
-    "scrapup/skills/utility"
+    "./skills"
   ],
   "keywords": [
     "unified-process",

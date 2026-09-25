@@ -18,7 +18,7 @@ Non-negotiable principles (project philosophy):
 **New repository — first public release (Beta).** Current contents:
 
 - **Plugin manifest + self-marketplace** — `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
-- **Skills** — the `communication` skill (`skills/foundations/communication`); more being migrated/consolidated.
+- **Skills** — the `communication` skill (`skills/communication`); more being migrated/consolidated.
 - **Release tooling** — release-please config/manifest, `.github/workflows/` (`release-please.yml`, `pr-title.yml`), `scripts/build-plugin-zip.sh`, and `package.json` for npm publish. See [Releasing](#releasing).
 - **Governance & docs** — `README` (trilingual), `CONTRIBUTING.md`, `.github/CODEOWNERS`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/`, `LICENSE` (MIT), and this `CLAUDE.md`.
 
@@ -54,13 +54,13 @@ The ecosystem (more skills, agents, commands, MCP servers, diagrams) is still be
 
 **Convergence with the current ecosystem.** Strong in the **middle** (Construction + multi-lens verification), thin at the **ends** (Inception/Transition) and on the **risk-driven** axis — where UP still has the most to teach. Already surpasses UP in: parallel multi-lens quality review, clean-context iteration (resolves *context rot*, inconceivable pre-LLM), roles as dispatchable agents, lean tailoring, and open tooling.
 
-**Roadmap.** Prioritized improvements toward the vision: (1) per-task risk field + risk-ordered iterations; (2) executable-baseline / skeleton gate between plan and implementation; (3) Transition via telemetry (verify features in prod post-merge); (4) formal milestone gates (LCO/LCA/IOC/Release); (5) traceability matrix (use case ↔ task ↔ test ↔ commit); (6) Inception `brief.md` bundle (vision, feature/risk/use-case lists, NFRs, candidate architecture, business case); (9) ADR artifact in Elaboration. First materialized step: the `scrapup-inception` skill producing `brief.md` in validated layers, gated by the `reviewer-process-lco` agent.
+**Roadmap.** Prioritized improvements toward the vision: (1) per-task risk field + risk-ordered iterations; (2) executable-baseline / skeleton gate between plan and implementation; (3) Transition via telemetry (verify features in prod post-merge); (4) formal milestone gates (LCO/LCA/IOC/Release); (5) traceability matrix (use case ↔ task ↔ test ↔ commit); (6) Inception `brief.md` bundle (vision, feature/risk/use-case lists, NFRs, candidate architecture, business case); (9) ADR artifact in Elaboration. First materialized step: the `inception` skill producing `brief.md` in validated layers, gated by the `reviewer-process-lco` agent.
 
 **Boundary cautions.** Do not reintroduce RUP weight — the lean incremental flow is the differentiator; heavyweight artifacts apply only to the full flow (≥5 tasks / high impact), never to small increments. Risk-driven means *ordering execution*, not a risk-management bureaucracy. Co-evolve process and tooling together; do not stack many innovations at once.
 
 ## Conventions
 
-- **Communication:** all output (responses, artifacts, ghostwritten text) follows the `communication` skill (`skills/foundations/communication/SKILL.md`) — register and form calibrated to the Unified Process actor being addressed.
+- **Communication:** all output (responses, artifacts, ghostwritten text) follows the `communication` skill (`skills/communication/SKILL.md`) — register and form calibrated to the Unified Process actor being addressed.
 - **Language — internationalized project:** **every versioned artifact is in English** (skills, agents, commands, documentation, diagrams, comments, identifiers, commit messages, PRs, issues). This convention is **mandatory**, no exceptions.
 - **Localization — public-facing only (MUST keep in sync):** the `README` is trilingual — `README.md` (English, **source of truth**), `README.pt.md` (Portuguese), `README.ja.md` (Japanese) — each opening with the language nav line (`🌐 [English](./README.md) | [日本語](./README.ja.md) | [Português](./README.pt.md)`, the current language **bold and unlinked**). **Directive:** any change to `README.md` MUST be replicated into `README.pt.md` and `README.ja.md` in the **same commit** — never let a translation drift or land EN-only; never edit PT/JA without the corresponding EN change. Keep all three structurally identical (same sections, order, links, code blocks); translate prose only, and keep established technical terms in English (e.g., *use case*, *baseline*, *pull request*, *commit*, *skill*, *agent*, *command*). This is the only localization surface — it does not loosen the English-only rule for artifacts above.
 - **Commits:** Conventional Commits (in English, per the convention above).

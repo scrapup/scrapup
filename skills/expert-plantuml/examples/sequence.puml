@@ -1,0 +1,25 @@
+@startuml
+title Sequence - Create resource (success and failure)
+actor Client
+participant "API Gateway" as gw
+participant "Controller" as ctrl
+participant "UseCase" as uc
+participant "MongoDB" as db
+participant "RabbitMQ" as mq
+
+Client -> gw: POST /api/v1/resource
+gw -> ctrl: Validate DTO
+ctrl -> uc: Execute logic
+uc -> db: Persist data
+
+alt Success
+    db --> uc: OK
+    uc -> mq: Publish event (try/catch)
+    uc --> ctrl: Result
+    ctrl --> gw: 201 Created
+else Database failure
+    db --> uc: Error
+    uc --> ctrl: Handled error
+    ctrl --> gw: 503 Service Unavailable
+end
+@enduml

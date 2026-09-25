@@ -27,7 +27,7 @@ Como a execução se torna barata e automatizada, a alavancagem migra para os **
 
 ## Status
 
-**Beta — primeiro release público.** O scrapup está configurado como um plugin instalável do Claude Code; o ecossistema está sendo consolidado aqui a partir de trabalho anterior, e o catálogo de artefatos cresce de forma incremental. Publicado até agora: a skill `communication` (`skills/foundations/communication`) — a doutrina de registro e forma de toda saída para cada stakeholder do Unified Process.
+**Beta — primeiro release público.** O scrapup está configurado como um plugin instalável do Claude Code; o ecossistema está sendo consolidado aqui a partir de trabalho anterior, e o catálogo de artefatos cresce de forma incremental. Publicado até agora: a skill `communication` (`skills/communication`) — a doutrina de registro e forma de toda saída para cada stakeholder do Unified Process.
 
 ## Instalação
 

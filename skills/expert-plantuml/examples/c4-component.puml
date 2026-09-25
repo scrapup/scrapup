@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+title C4 L3 - Service components
+
+Container_Boundary(api, "Service Name") {
+    Component(controller, "Controller", "NestJS/Fastify", "Validates DTOs and routes")
+    Component(usecase, "UseCase", "Service", "Business rules")
+    Component(repository, "Repository", "Mongoose/Prisma", "Persistence")
+}
+
+ContainerDb(mongodb, "MongoDB", "MongoDB", "Collection X")
+ContainerQueue(broker, "RabbitMQ", "amqplib", "Messaging")
+
+Rel(controller, usecase, "Executes")
+Rel(usecase, repository, "Persists through")
+Rel(usecase, broker, "Publishes event")
+Rel(repository, mongodb, "Reads/Writes")
+
+SHOW_LEGEND()
+@enduml

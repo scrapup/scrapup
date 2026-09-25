@@ -1,0 +1,19 @@
+@startuml
+title Activity - Process configuration
+start
+:read config;
+if (config valid?) then (yes)
+  :process data;
+  fork
+    :action 1;
+  fork again
+    :action 2;
+  end fork
+  :consolidate;
+else (no)
+  :log error;
+  stop
+endif
+:send result;
+stop
+@enduml

@@ -27,7 +27,7 @@ scrapup は **Unified Process の柱** を不変の憲法として保ち、近�
 
 ## ステータス
 
-**Beta — 最初の公開リリース。** scrapup は Claude Code のインストール可能なプラグインとして構成されています。エコシステムは以前の成果からここへ統合されつつあり、成果物のカタログは漸進的に拡充されます。これまでに公開: `communication` skill（`skills/foundations/communication`）— Unified Process のあらゆるステークホルダーに対する、すべての出力のレジスターと形式に関するドクトリン。
+**Beta — 最初の公開リリース。** scrapup は Claude Code のインストール可能なプラグインとして構成されています。エコシステムは以前の成果からここへ統合されつつあり、成果物のカタログは漸進的に拡充されます。これまでに公開: `communication` skill（`skills/communication`）— Unified Process のあらゆるステークホルダーに対する、すべての出力のレジスターと形式に関するドクトリン。
 
 ## インストール
 

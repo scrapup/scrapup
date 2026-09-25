@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+title C4 L2 - Example system containers
+
+Person(admin, "Administrator")
+System_Boundary(c1, "Example System") {
+    Container(web_app, "Web Application", "C#, ASP.NET Core", "Main user interface")
+    Container(api, "API", "Node.js", "Business rules")
+}
+System_Ext(twitter, "Twitter", "External social network")
+
+Rel(admin, web_app, "Uses", "HTTPS")
+Rel(web_app, api, "Calls", "HTTP")
+Rel(api, twitter, "Fetches data", "HTTPS")
+
+SHOW_LEGEND()
+@enduml
