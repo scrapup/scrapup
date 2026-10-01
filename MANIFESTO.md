@@ -22,7 +22,7 @@ amplifies depends on where we put our human effort. We put it where judgment liv
 
 ## We value
 
-**Trust** over speed.
+**Trust** over speed.\
 **Evidence** over declaration.
 
 That is, while there is value in the items on the right, we value the items on the left more.
@@ -49,4 +49,7 @@ as good as the hand and the judgment that hold it.
 
 - Marco Antonio Luqueti Faustino — 2026-10-01
 
-To co-sign, open a pull request that adds your name to this list. The commit is your signature.
+To co-sign, open a pull request that adds your own name to this list. The commit is your signature.
+Signatures are public and permanent in the git history and in published releases; use your
+GitHub noreply e-mail if you prefer not to expose your address. To withdraw, open an issue or
+pull request: your name is removed from future versions.

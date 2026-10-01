@@ -2,7 +2,8 @@
 #
 # Build the importable scrapup plugin .zip.
 #
-# Packages the plugin payload only (manifest + components) with the
+# Packages the plugin payload (manifest + components) plus the public docs
+# (README, MANIFESTO, PRINCIPLES, LICENSE) with the
 # .claude-plugin/ manifest at the zip root, so the archive loads directly via
 # `claude --plugin-dir scrapup-<tag>.zip`. package.json, workflows, scripts and
 # VCS metadata are intentionally excluded.

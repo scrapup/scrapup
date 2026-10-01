@@ -23,7 +23,7 @@ scrapup は **Unified Process の柱** を不変の憲法として保ち、近�
 
 - **柱は不変** — ユースケース駆動、アーキテクチャ中心、反復的かつ漸進的、リスク駆動。
 - **エージェントがエンジニアリングのワークフローを担う** — Requirements → Analysis → Design → Implementation → Test。
-- **人間は 2 つの役割を保持する** — **Architect**（アーキテクチャと実行可能な baseline の責任者）と **Validator**（多レンズレビューを裁定し、各フェーズのマイルストーンを封印する: LCO → LCA → IOC → Product Release）。
+- **人間は 2 つの役割を保持する** — **Architect**（アーキテクチャと実行可能な baseline の責任者）と **Validator**（多レンズレビューを裁定し、フェーズのマイルストーンを封印する: LCO → LCA → IOC → Product Release — IOC の封印方法は未決定、[PRINCIPLES](./PRINCIPLES.md) P4 を参照）。
 
 実行が安価かつ自動化されることで、レバレッジは **制御点** — アーキテクチャ・マイルストーン・リスクの順序付け — へと移ります。まさにアーキテクト兼バリデーターが働く場所です。
 

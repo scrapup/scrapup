@@ -2,7 +2,7 @@
 
 🌐 [English](./MANIFESTO.md) | [日本語](./MANIFESTO.ja.md) | **Português**
 
-> Do scrap à entrega forjada e confiável.
+> Do *scrap* à entrega forjada e confiável.
 
 ## Preâmbulo
 
@@ -23,7 +23,7 @@ esforço humano. Nós o colocamos onde vive o julgamento.
 
 ## Nós valorizamos
 
-**Confiança** acima de velocidade.
+**Confiança** acima de velocidade.\
 **Evidência** acima de declaração.
 
 Ou seja, mesmo havendo valor nos itens à direita, nós valorizamos mais os itens à esquerda.
@@ -50,4 +50,7 @@ Substituir as pessoas de produto e de engenharia. O scrapup é uma ferramenta, a
 
 - Marco Antonio Luqueti Faustino — 2026-10-01
 
-Para assinar junto, abra um pull request que adicione o seu nome a esta lista. O commit é a sua assinatura.
+Para assinar junto, abra um pull request que adicione o seu próprio nome a esta lista. O commit é a sua assinatura.
+As assinaturas são públicas e permanentes no histórico do git e nas releases publicadas; use o
+e-mail noreply do GitHub se preferir não expor o seu endereço. Para retirar a assinatura, abra uma
+issue ou um pull request: o seu nome é removido das versões futuras.
