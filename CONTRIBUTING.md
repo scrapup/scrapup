@@ -31,8 +31,9 @@ These are enforced — PRs that break them will be asked to change.
 
 - **Every versioned artifact is in English** — code, skills, agents, commands, docs, diagrams,
   identifiers, comments, commit messages, PRs, issues. No exceptions.
-- **README is trilingual.** `README.md` (English) is the source of truth; `README.pt.md` and
-  `README.ja.md` must be updated **in the same commit**, kept structurally identical. Translate
+- **README and MANIFESTO are trilingual.** `README.md` / `MANIFESTO.md` (English) are the source
+  of truth; their `.pt.md` and `.ja.md` counterparts must be updated **in the same commit**, kept
+  structurally identical. Translate
   prose only; keep established technical terms in English (*use case*, *baseline*, *commit*,
   *skill*, *agent*, …).
 
@@ -67,7 +68,7 @@ These are enforced — PRs that break them will be asked to change.
 - Run `claude plugin validate .` and ensure it passes.
 - Include **evidence** in the PR (command output, validation results) — "done" requires
   observable verification.
-- If you changed `README.md`, confirm `README.pt.md` and `README.ja.md` are in sync.
+- If you changed `README.md`, confirm `README.pt.md` and `README.ja.md` are in sync. The same applies to `MANIFESTO.md`.
 
 ## License
 

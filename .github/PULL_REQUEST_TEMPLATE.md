@@ -21,6 +21,6 @@ Examples: `feat(skills): add inception brief layer` · `fix(forge): handle empty
 
 - [ ] PR title follows Conventional Commits (`type(scope): subject`)
 - [ ] Versioned artifacts are in English (code, skills, agents, docs, identifiers)
-- [ ] If `README.md` changed, `README.pt.md` and `README.ja.md` are updated in this same PR
+- [ ] If `README.md` changed, `README.pt.md` and `README.ja.md` are updated in this same PR (same for `MANIFESTO.md`)
 - [ ] No manual version bump — release-please owns `package.json`, `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
 - [ ] Breaking changes flagged with `!` or a `BREAKING CHANGE:` footer (if any)

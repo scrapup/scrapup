@@ -20,7 +20,7 @@ Non-negotiable principles (project philosophy):
 - **Plugin manifest + self-marketplace** — `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
 - **Skills** — the `communication` skill (`skills/communication`); more being migrated/consolidated.
 - **Release tooling** — release-please config/manifest, `.github/workflows/` (`release-please.yml`, `pr-title.yml`), `scripts/build-plugin-zip.sh`, and `package.json` for npm publish. See [Releasing](#releasing).
-- **Governance & docs** — `README` (trilingual), `CONTRIBUTING.md`, `.github/CODEOWNERS`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/`, `LICENSE` (MIT), and this `CLAUDE.md`.
+- **Governance & docs** — `README` (trilingual), `MANIFESTO` (trilingual) + `PRINCIPLES.md` — the beliefs and the norms derived from them, `CONTRIBUTING.md`, `.github/CODEOWNERS`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/`, `LICENSE` (MIT), and this `CLAUDE.md`.
 
 The ecosystem (more skills, agents, commands, MCP servers, diagrams) is still being migrated from prior work. When adding content, document the actual architecture here as soon as it exists — do not anticipate structure that is not yet there.
 
@@ -34,12 +34,12 @@ The ecosystem (more skills, agents, commands, MCP servers, diagrams) is still be
 
 | UP axis | Classic UP (1999) | AI-Assisted UP (this thesis) |
 |---|---|---|
-| **Pillars** (use-case driven, architecture-centric, iterative & incremental, risk-driven) | Immutable | **Immutable** — the constitution; inherited, not modernized |
+| **Pillars** (use-case driven, architecture-centric, iterative & incremental, risk-driven) | Immutable | **Inherited as lineage** — vocabulary and milestone spine; degree of fidelity to be declared in an ADR (`PRINCIPLES.md` P10) |
 | **Engineering workflows** (Requirements→Analysis→Design→Implementation→Test) | Human team | **Agents** (blueprint, forge, TDAD, reviewers, expert-*) |
 | **Workers / roles** | People wearing hats | **Dispatchable agents** — parallel reviewers reify the roles |
 | **Human** | Does everything | **Two retained roles: Architect + Validator** |
 
-**Two retained human roles.** **Architect** owns *architecture-centric*: defines and validates the architecture, approves the executable baseline, fixes constraints. **Validator** owns quality/verification: adjudicates the review lenses, approves milestones/gates, decides risk ordering, seals the milestone. The AI proposes and verifies; the human decides and seals.
+**Two retained human roles.** **Architect** owns *architecture-centric*: defines and validates the architecture, approves the executable baseline, fixes constraints. **Validator** owns quality/verification: adjudicates the review lenses, approves milestones/gates, approves the risk ordering agents propose, seals the milestone. The AI proposes and verifies; the human decides and seals.
 
 **Leverage shifts to control points.** With execution cheap and automated, value migrates to **milestones + architecture + risk ordering**. Consequence: **Construction inverts** — the UP's largest phase (~50%) tends to become the smallest, with effort moving to Inception/Elaboration (architect/validator judgment). The phase/milestone axis stays intact; only the (always referential) effort distribution flips.
 
@@ -60,9 +60,10 @@ The ecosystem (more skills, agents, commands, MCP servers, diagrams) is still be
 
 ## Conventions
 
+- **Manifesto:** `MANIFESTO.md` states what scrapup believes; `PRINCIPLES.md` states the norms derived from it. New work MUST NOT contradict them; when it must, amend them first.
 - **Communication:** all output (responses, artifacts, ghostwritten text) follows the `communication` skill (`skills/communication/SKILL.md`) — register and form calibrated to the Unified Process actor being addressed.
 - **Language — internationalized project:** **every versioned artifact is in English** (skills, agents, commands, documentation, diagrams, comments, identifiers, commit messages, PRs, issues). This convention is **mandatory**, no exceptions.
-- **Localization — public-facing only (MUST keep in sync):** the `README` is trilingual — `README.md` (English, **source of truth**), `README.pt.md` (Portuguese), `README.ja.md` (Japanese) — each opening with the language nav line (`🌐 [English](./README.md) | [日本語](./README.ja.md) | [Português](./README.pt.md)`, the current language **bold and unlinked**). **Directive:** any change to `README.md` MUST be replicated into `README.pt.md` and `README.ja.md` in the **same commit** — never let a translation drift or land EN-only; never edit PT/JA without the corresponding EN change. Keep all three structurally identical (same sections, order, links, code blocks); translate prose only, and keep established technical terms in English (e.g., *use case*, *baseline*, *pull request*, *commit*, *skill*, *agent*, *command*). This is the only localization surface — it does not loosen the English-only rule for artifacts above.
+- **Localization — public-facing only (MUST keep in sync):** the `README` is trilingual — `README.md` (English, **source of truth**), `README.pt.md` (Portuguese), `README.ja.md` (Japanese) — each opening with the language nav line (`🌐 [English](./README.md) | [日本語](./README.ja.md) | [Português](./README.pt.md)`, the current language **bold and unlinked**). **Directive:** any change to `README.md` MUST be replicated into `README.pt.md` and `README.ja.md` in the **same commit** — never let a translation drift or land EN-only; never edit PT/JA without the corresponding EN change. Keep all three structurally identical (same sections, order, links, code blocks); translate prose only, and keep established technical terms in English (e.g., *use case*, *baseline*, *pull request*, *commit*, *skill*, *agent*, *command*). The same rule applies to `MANIFESTO.md` / `MANIFESTO.pt.md` / `MANIFESTO.ja.md` (nav line pointing to the `MANIFESTO.*` files). These are the only localization surfaces — they do not loosen the English-only rule for artifacts above.
 - **Commits:** Conventional Commits (in English, per the convention above).
 - **License:** MIT. Keep the copyright header coherent when adding relevant files.
 
