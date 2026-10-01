@@ -1,5 +1,6 @@
 # Local, non-versioned directory (operational notes, secrets, private docs)
 .local/
+docs/plans
 
 # Environment
 .env
