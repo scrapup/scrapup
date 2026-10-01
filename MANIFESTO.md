@@ -22,7 +22,7 @@ amplifies depends on where we put our human effort. We put it where judgment liv
 
 ## We value
 
-**Trust** over speed.\
+**Trust** over speed.
 **Evidence** over declaration.
 
 That is, while there is value in the items on the right, we value the items on the left more.

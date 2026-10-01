@@ -23,7 +23,7 @@ esforço humano. Nós o colocamos onde vive o julgamento.
 
 ## Nós valorizamos
 
-**Confiança** acima de velocidade.\
+**Confiança** acima de velocidade.
 **Evidência** acima de declaração.
 
 Ou seja, mesmo havendo valor nos itens à direita, nós valorizamos mais os itens à esquerda.
