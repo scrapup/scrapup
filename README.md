@@ -4,6 +4,8 @@
 
 > From informational scrap to forged delivery — software built by an **AI-assisted Unified Process**.
 
+**[Read the manifesto](./MANIFESTO.md)** — what we believe about software, agents, and the people who build it.
+
 **scrapup** is an ecosystem of *skills*, *agents*, and *commands* for [Claude Code](https://claude.com/claude-code) that operationalizes the **document → validate → deliver** cycle with engineering rigor. The name carries the project's thesis: raising (*up*) raw material (*scrap*) into delivered software, through a modernized, agent-assisted **Unified Process (UP)** — where the developer is repositioned from **executor** to **architect and validator**, while agents run the engineering workflows.
 
 ## Why it exists
@@ -21,7 +23,7 @@ scrapup keeps the **Unified Process pillars** as an unchanging constitution and 
 
 - **The pillars stay** — use-case driven, architecture-centric, iterative & incremental, risk-driven.
 - **Agents run the engineering workflows** — Requirements → Analysis → Design → Implementation → Test.
-- **The human keeps two roles** — **Architect** (owns the architecture and the executable baseline) and **Validator** (adjudicates multi-lens review and seals each phase milestone: LCO → LCA → IOC → Product Release).
+- **The human keeps two roles** — **Architect** (owns the architecture and the executable baseline) and **Validator** (adjudicates multi-lens review and seals the phase milestones: LCO → LCA → IOC → Product Release — how IOC is sealed is still open, see [PRINCIPLES](./PRINCIPLES.md) P4).
 
 Because execution becomes cheap and automated, the leverage shifts to the **control points** — architecture, milestones, and risk ordering — which is exactly where the architect/validator works.
 

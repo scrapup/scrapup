@@ -4,6 +4,8 @@
 
 > Do *scrap* informacional à entrega forjada — software construído por um **Unified Process assistido por IA**.
 
+**[Leia o manifesto](./MANIFESTO.pt.md)** — no que acreditamos sobre software, agentes e as pessoas que o constroem.
+
 **scrapup** é um ecossistema de *skills*, *agents* e *commands* para o [Claude Code](https://claude.com/claude-code) que operacionaliza o ciclo **documentar → validar → entregar** com rigor de engenharia. O nome carrega a tese do projeto: elevar (*up*) matéria-prima (*scrap*) até software entregue, por meio de um **Unified Process (UP)** modernizado e assistido por agentes — em que o desenvolvedor deixa de ser **executor** para ser **arquiteto e validador**, enquanto os agentes conduzem os fluxos de engenharia.
 
 ## Por que existe
@@ -21,7 +23,7 @@ O scrapup mantém os **pilares do Unified Process** como uma constituição imut
 
 - **Os pilares permanecem** — orientado a casos de uso, centrado na arquitetura, iterativo e incremental, orientado a risco.
 - **Os agentes conduzem os fluxos de engenharia** — Requirements → Analysis → Design → Implementation → Test.
-- **O humano mantém dois papéis** — **Architect** (dono da arquitetura e do baseline executável) e **Validator** (adjudica a revisão multi-lente e sela cada marco de fase: LCO → LCA → IOC → Product Release).
+- **O humano mantém dois papéis** — **Architect** (dono da arquitetura e do baseline executável) e **Validator** (adjudica a revisão multi-lente e sela os marcos de fase: LCO → LCA → IOC → Product Release — como o IOC é selado ainda está em aberto, veja [PRINCIPLES](./PRINCIPLES.md) P4).
 
 Como a execução se torna barata e automatizada, a alavancagem migra para os **pontos de controle** — arquitetura, marcos e ordenação por risco — exatamente onde o arquiteto/validador atua.
 
