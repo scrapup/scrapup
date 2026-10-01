@@ -37,7 +37,7 @@ that detects a violation stops and reports it with the principle ID instead of p
 | V1 | We value — Trust over speed |
 | V2 | We value — Evidence over declaration |
 | S1–S4 | The spine — LCO, LCA, IOC, Product Release |
-| PM | We promise — What you specify is what you get |
+| CM | We commit — What you specify is what you get |
 | RF | We refuse — to replace the people of product and engineering |
 
 ## Principles
@@ -50,7 +50,7 @@ that detects a violation stops and reports it with the principle ID instead of p
 **Rationale:** The specification is what makes the result reproducible and auditable,
 independent of the model that executes it.
 
-**Traces to:** B3, PM
+**Traces to:** B3, CM
 
 **Status:** partial — `skills/forge` implements from specification artifacts and
 `skills/blueprint` produces them (Node.js projects); bugfixes and refactors through

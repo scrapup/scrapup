@@ -36,7 +36,7 @@ Four named decisions carry an idea to production:
 - **Initial Operational Capability (IOC)** — what was specified is built, and evidence proves it.
 - **Product Release** — it works where it matters: in the hands of its users.
 
-## We promise
+## We commit
 
 **What you specify is what you get.** What is specified is built; what is built was specified.
 

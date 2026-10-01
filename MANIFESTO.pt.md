@@ -37,7 +37,7 @@ Quatro decisões nomeadas levam uma ideia até a produção:
 - **Initial Operational Capability (IOC)** — o que foi especificado está construído, e a evidência o comprova.
 - **Product Release** — funciona onde importa: nas mãos de quem o usa.
 
-## Nós prometemos
+## Nós nos comprometemos
 
 **O que você especifica é o que você recebe.** O que é especificado é construído; o que é construído foi especificado.
 
