@@ -10,7 +10,9 @@ normative; rationales are explanatory.
 
 Where a skill, agent, tool default, or harness instruction conflicts with a principle, the
 principle prevails; only a human may grant an exception, and the exception is recorded. An agent
-that detects a violation stops and reports it with the principle ID instead of proceeding.
+that detects a violation stops and reports it with the principle ID instead of proceeding. Where no
+mechanism upholds a principle yet, the agent escalates to a human instead of assuming
+compliance.
 
 ## How to read a principle
 
@@ -19,10 +21,6 @@ that detects a violation stops and reports it with the principle ID instead of p
 - **Rationale** — why it exists.
 - **Traces to** — the Manifesto item it derives from (see the table below). A principle with no
   trace signals a missing belief or an out-of-scope principle.
-- **Status** — `enforced` (a mechanism upholds it), `partial` (a mechanism upholds part of it;
-  the gap is stated), or `aspirational` (no mechanism yet). Status describes tooling, not
-  obligation: an agent MUST NOT act against a principle whatever its status; where no mechanism
-  exists, the agent escalates to a human instead of assuming compliance.
 
 ## Manifesto references
 
@@ -52,9 +50,6 @@ independent of the model that executes it.
 
 **Traces to:** B3, CM
 
-**Status:** partial — features are implemented from specification artifacts; bugfixes and
-refactors may still run without one.
-
 ### P2 — Evidence before done
 
 **Statement:** Work MUST NOT be declared done without observable evidence (command output, test
@@ -63,8 +58,6 @@ results, or a validation report) produced for that claim.
 **Rationale:** A declaration is a claim; evidence is a fact.
 
 **Traces to:** V2
-
-**Status:** enforced — upheld when verification is invoked; not yet a mechanical gate.
 
 ### P3 — Multi-lens validation
 
@@ -75,8 +68,6 @@ it is produced by a reviewer other than the implementer, in a clean context.
 **Rationale:** A single reviewer, human or agent, sees a single angle; trust needs several.
 
 **Traces to:** B1, V1
-
-**Status:** partial — parallel review exists; dedicated review lenses are not yet published.
 
 ### P4 — Humans seal the milestones
 
@@ -89,9 +80,6 @@ recorded in a versioned artifact. An agent MUST NOT record a seal on a human's b
 
 **Traces to:** B1, B5, S1–S4
 
-**Status:** partial — LCO: upheld (LCO review, sealed by the user); LCA and Product Release:
-aspirational.
-
 ### P5 — Agents propose risk ordering; humans approve it
 
 **Statement:** Agents MAY propose the order in which risks are attacked; a human MUST approve
@@ -102,8 +90,6 @@ accepting risk is a decision.
 
 **Traces to:** B1, B2
 
-**Status:** aspirational
-
 ### P6 — Human authorship and accountability
 
 **Statement:** Commits and pull requests MUST carry a human author and MUST NOT attribute
@@ -112,8 +98,6 @@ authorship or co-authorship to an agent.
 **Rationale:** Someone answers for the result, and that someone is a person.
 
 **Traces to:** B6, RF
-
-**Status:** partial — commits: upheld (post-commit check); pull requests: aspirational.
 
 ### P7 — Ceremony scales with impact
 
@@ -125,8 +109,6 @@ more than 5 tasks.
 
 **Traces to:** V1
 
-**Status:** enforced — the incremental and full flows are both available.
-
 ### P8 — Open artifacts, no lock-in
 
 **Statement:** Artifacts (specifications, decisions, reviews) MUST stay in open, plain-text
@@ -137,9 +119,6 @@ Specifications MUST NOT require a specific model or vendor to be read or execute
 
 **Traces to:** B3
 
-**Status:** partial — artifacts: repository conventions (MIT license, markdown, PlantUML, git);
-runtime independence: aspirational — the tooling currently targets one agent runtime.
-
 ### P9 — The cycle reaches production
 
 **Statement:** After release, delivery SHOULD include a verification of the feature in the
@@ -148,8 +127,6 @@ user's environment (Transition) before the work is considered complete.
 **Rationale:** Software is not done until it works where it matters.
 
 **Traces to:** B4, S4
-
-**Status:** aspirational
 
 ### P10 — Lineage declared
 
@@ -160,5 +137,3 @@ MUST be declared in an Architecture Decision Record.
 a decision, and decisions need names.
 
 **Traces to:** B5
-
-**Status:** aspirational — ADR not yet written
