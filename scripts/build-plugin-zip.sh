@@ -2,7 +2,8 @@
 #
 # Build the importable scrapup plugin .zip.
 #
-# Packages the plugin payload only (manifest + components) with the
+# Packages the plugin payload (manifest + components) plus the public docs
+# (README, MANIFESTO, PRINCIPLES, LICENSE) with the
 # .claude-plugin/ manifest at the zip root, so the archive loads directly via
 # `claude --plugin-dir scrapup-<tag>.zip`. package.json, workflows, scripts and
 # VCS metadata are intentionally excluded.
@@ -29,7 +30,7 @@ stage="$(mktemp -d)"
 trap 'rm -rf "$stage"' EXIT
 
 cp -R .claude-plugin "$stage/"
-for path in skills agents commands hooks README.md README.pt.md README.ja.md LICENSE; do
+for path in skills agents commands hooks README.md README.pt.md README.ja.md MANIFESTO.md MANIFESTO.pt.md MANIFESTO.ja.md PRINCIPLES.md LICENSE; do
   [ -e "$path" ] && cp -R "$path" "$stage/"
 done
 
