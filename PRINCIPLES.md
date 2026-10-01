@@ -19,8 +19,8 @@ that detects a violation stops and reports it with the principle ID instead of p
 - **Rationale** — why it exists.
 - **Traces to** — the Manifesto item it derives from (see the table below). A principle with no
   trace signals a missing belief or an out-of-scope principle.
-- **Status** — `enforced` (names what upholds it), `partial` (names what upholds part of it and
-  what is not covered), or `aspirational` (no mechanism yet). Status describes tooling, not
+- **Status** — `enforced` (a mechanism upholds it), `partial` (a mechanism upholds part of it;
+  the gap is stated), or `aspirational` (no mechanism yet). Status describes tooling, not
   obligation: an agent MUST NOT act against a principle whatever its status; where no mechanism
   exists, the agent escalates to a human instead of assuming compliance.
 
@@ -52,9 +52,8 @@ independent of the model that executes it.
 
 **Traces to:** B3, CM
 
-**Status:** partial — `skills/forge` implements from specification artifacts and
-`skills/blueprint` produces them (Node.js projects); bugfixes and refactors through
-`skills/test-driven-agentic-development` may run without one.
+**Status:** partial — features are implemented from specification artifacts; bugfixes and
+refactors may still run without one.
 
 ### P2 — Evidence before done
 
@@ -65,8 +64,7 @@ results, or a validation report) produced for that claim.
 
 **Traces to:** V2
 
-**Status:** enforced — `skills/verification-before-completion` (when the skill is invoked; not a
-mechanical gate)
+**Status:** enforced — upheld when verification is invoked; not yet a mechanical gate.
 
 ### P3 — Multi-lens validation
 
@@ -78,8 +76,7 @@ it is produced by a reviewer other than the implementer, in a clean context.
 
 **Traces to:** B1, V1
 
-**Status:** partial — `skills/requesting-code-review` with `skills/dispatching-parallel-agents`;
-dedicated review lenses are not yet published in this repository.
+**Status:** partial — parallel review exists; dedicated review lenses are not yet published.
 
 ### P4 — Humans seal the milestones
 
@@ -92,8 +89,8 @@ recorded in a versioned artifact. An agent MUST NOT record a seal on a human's b
 
 **Traces to:** B1, B5, S1–S4
 
-**Status:** partial — LCO: `skills/inception` (LCO review, sealed by the user); LCA and Product
-Release: aspirational.
+**Status:** partial — LCO: upheld (LCO review, sealed by the user); LCA and Product Release:
+aspirational.
 
 ### P5 — Agents propose risk ordering; humans approve it
 
@@ -116,8 +113,7 @@ authorship or co-authorship to an agent.
 
 **Traces to:** B6, RF
 
-**Status:** partial — commits: `skills/commit-writer` (post-commit check); pull requests:
-aspirational.
+**Status:** partial — commits: upheld (post-commit check); pull requests: aspirational.
 
 ### P7 — Ceremony scales with impact
 
@@ -129,7 +125,7 @@ more than 5 tasks.
 
 **Traces to:** V1
 
-**Status:** enforced — `skills/blueprint` (incremental flow vs. full flow)
+**Status:** enforced — the incremental and full flows are both available.
 
 ### P8 — Open artifacts, no lock-in
 
