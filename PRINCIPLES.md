@@ -33,7 +33,7 @@ that detects a violation stops and reports it with the principle ID instead of p
 | B3 | We believe — The specification is the asset, not the model |
 | B4 | We believe — Software is a whole cycle |
 | B5 | We believe — A decision without a name cannot be audited |
-| B6 | We believe — There are roles where we are needed |
+| B6 | We believe — People lead |
 | V1 | We value — Trust over speed |
 | V2 | We value — Evidence over declaration |
 | S1–S4 | The spine — LCO, LCA, IOC, Product Release |

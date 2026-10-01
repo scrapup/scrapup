@@ -18,7 +18,7 @@ amplifies depends on where we put our human effort. We put it where judgment liv
 - **The specification is the asset, not the model.**
 - **Software is a whole cycle** — from the first idea to the product working in production.
 - **A decision without a name cannot be audited.**
-- **There are roles where we are needed** — product, architecture, validation.
+- **People lead** — product, architecture, validation, delivery.
 
 ## We value
 

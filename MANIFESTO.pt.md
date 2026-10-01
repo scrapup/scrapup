@@ -19,7 +19,7 @@ esforço humano. Nós o colocamos onde vive o julgamento.
 - **A especificação é o ativo, não o modelo.**
 - **Software é um ciclo inteiro** — da primeira ideia ao produto funcionando em produção.
 - **Uma decisão sem nome não pode ser auditada.**
-- **Há papéis em que somos necessários** — produto, arquitetura, validação.
+- **Pessoas lideram** — produto, arquitetura, validação, entrega.
 
 ## Nós valorizamos
 
