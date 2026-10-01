@@ -1,5 +1,6 @@
 @startuml
 title Sequence - Create resource (success and failure)
+' Illustrative technologies - derive real ones from context.
 actor Client
 participant "API Gateway" as gw
 participant "Controller" as ctrl

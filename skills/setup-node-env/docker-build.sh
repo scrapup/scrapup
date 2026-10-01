@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
-# Executa docker build do Dockerfile do projeto com NPM_TOKEN como build-arg.
+# Builds the project's Dockerfile with BuildKit. When NPM_TOKEN is set, it is
+# passed as a BuildKit secret (never as a build-arg, which would leak it into
+# the image history). The Dockerfile must consume it with:
+#   RUN --mount=type=secret,id=npm_token NPM_TOKEN="$(cat /run/secrets/npm_token)" npm ci
 #
+# Usage: docker-build.sh [project-dir]
 # Exit codes:
 #   0 — build OK
-#   1 — Dockerfile não encontrado
-#   2 — NPM_TOKEN não definido
-#   3 — docker build falhou
-
-CLAUDE_ENV="$HOME/.claude/.env"
-[ -z "${NPM_TOKEN:-}" ] && [ -f "$CLAUDE_ENV" ] && . "$CLAUDE_ENV"
+#   1 — Dockerfile not found
+#   2 — the Dockerfile mounts the npm_token secret but NPM_TOKEN is not set
+#   3 — docker build failed
 
 PROJECT_DIR="${1:-.}"
 
@@ -27,13 +28,16 @@ if [ -z "$dockerfile" ]; then
   exit 1
 fi
 
-if [ -z "${NPM_TOKEN:-}" ]; then
+secret_args=()
+if [ -n "${NPM_TOKEN:-}" ]; then
+  secret_args=(--secret "id=npm_token,env=NPM_TOKEN")
+elif grep -qE 'id=npm_token' "$dockerfile"; then
   echo "DOCKER_BUILD_STATUS=no_npm_token"
   exit 2
 fi
 
 echo "Building ${dockerfile}..."
-if docker build --build-arg NPM_TOKEN="${NPM_TOKEN}" -f "$dockerfile" "$PROJECT_DIR"; then
+if DOCKER_BUILDKIT=1 docker build ${secret_args[@]+"${secret_args[@]}"} -f "$dockerfile" "$PROJECT_DIR"; then
   echo "DOCKER_BUILD_STATUS=ok"
   exit 0
 fi

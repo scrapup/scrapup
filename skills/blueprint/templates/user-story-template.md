@@ -22,13 +22,13 @@ The User Story **is not** a task the developer executes. It is a **value groupin
 1. Defines **what** will be delivered and **what value** it adds to the product
 2. Serves as the **planning and tracking** unit in refinement/sprint
 3. Groups the **atomic Tasks** that together make up the value delivery
-4. Is the unit the engineering team registers, linked to the product management Epic
+4. Is the unit the engineering team registers, linked to the product management Epic when one exists
 
 ## Constraints
 
 - **NEVER** mix more than one value deliverable in the same User Story
 - **NEVER** detail technical implementation in the User Story — that belongs to the Tasks
-- **NEVER** create User Stories without an explicit link to the reference Epic
+- **ALWAYS** record the reference Epic, asked for together with the first US ID; if none exists, write `Epic: none (incremental)` — never invent `E-XX`
 - **NEVER** choose or infer the `US-XX` ID — ask the user for the first User Story ID and derive the following US sequentially. See **User Story Identifiers** in `SKILL.md`
 - The "As... I want... So that..." narrative must focus on **business value**, not technical detail
 - Each User Story must be **demonstrable** at the end of the sprint — if it is not demonstrable, re-slice it
@@ -50,7 +50,7 @@ Tasks use `TF-XX-YY`, where `XX` **inherits exactly** the parent US ID and `YY` 
 ```markdown
 ## [US-XX]: [Title — Value Deliverable]
 
-**Epic:** [E-XX] Epic name (product management reference)
+**Epic:** [E-XX] Epic name (product management reference) | none (incremental)
 **System:** [Exact repository name]
 **Estimate:** [X] Story Points
 **Priority:** [P0 | P1 | P2]
@@ -119,7 +119,7 @@ Ask yourself: "Can I demonstrate this US's value at the end of the sprint?" If t
 | User Story | Value Delivered | Demonstrable? |
 |---|---|---|
 | US-01: Sync legacy data into the ODS | Sales queries return real-time data | Yes — the query returns updated data |
-| US-02: SME quote lookup endpoint | The user gets a calculated quote in < 1s | Yes — the HTTP call returns the quote |
+| US-02: Book availability lookup endpoint | The member sees whether a copy can be reserved | Yes — the HTTP call returns the availability |
 | US-03: Automatic consumer error notification | The support team is alerted when the sync fails | Yes — alert fired in a failure scenario |
 
 ### Bad Slicing Examples

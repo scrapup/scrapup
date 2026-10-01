@@ -24,7 +24,7 @@ Query mcp-saga for earlier executions to calibrate the analysis:
 | Most frequent error types | Prioritizes mitigations | "60% of validation failures are lint, not tests" |
 | Post-commit validation cycles | Estimates real cost | "UseCase TFs use 4-5 cycles on average" |
 
-With no history (first use of mcp-saga or a new project): say the analysis has no historical data and use the technical analysis only.
+With no history (first use of mcp-saga or a new project): say the analysis has no historical data, use the technical analysis only, and express success likelihood qualitatively (`low` / `medium` / `high`), never as a percentage.
 
 ## Per-TF analysis
 
@@ -36,7 +36,7 @@ With no history (first use of mcp-saga or a new project): say the analysis has n
 
 ## Report content
 
-1. **Estimated success probability** (%), calibrated by history when available.
+1. **Estimated success likelihood:** a percentage only when backed by history, stating the explicit basis (e.g. "8 of 10 similar TFs done without override"); without history, qualitative `low` / `medium` / `high` with the technical justification.
 2. **High-risk TFs** with justification and similar failure patterns found in history.
 3. **Mitigation suggestions:** slice a complex TF into sub-TFs; provide more context (e.g. reference an existing guard in the project); resolve a pending external dependency; reorder parallelization waves.
 4. **Parallelization waves** with the TFs in each.

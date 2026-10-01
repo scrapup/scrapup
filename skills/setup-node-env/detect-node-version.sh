@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Detecta versão Node.js a partir de .nvmrc ou Dockerfile do projeto.
+# Detects the project's Node.js version from .nvmrc or the Dockerfile.
 #
-# Saída (stdout): NODE_VERSION=<version> SOURCE=<nvmrc|dockerfile>
+# Usage: detect-node-version.sh [project-dir]
+# Output (stdout, KEY=VALUE lines):
+#   NODE_VERSION=<version>   only on exit 0
+#   SOURCE=<nvmrc|dockerfile|none>
+#   DOCKERFILE=<path>        whenever a Dockerfile was found (exit 0 via dockerfile, or exit 2)
 # Exit codes:
-#   0 — versão encontrada
-#   1 — nenhum .nvmrc nem Dockerfile encontrado
-#   2 — Dockerfile encontrado mas versão Node não extraível
+#   0 — version found
+#   1 — neither .nvmrc nor a Dockerfile found
+#   2 — Dockerfile found but the Node version cannot be extracted
 
 PROJECT_DIR="${1:-.}"
 
@@ -33,7 +37,7 @@ fi
 
 echo "DOCKERFILE=${dockerfile}"
 
-version=$(grep -iE '^FROM\s+node:' "$dockerfile" | head -1 | sed -E 's/^FROM\s+node:([0-9]+(\.[0-9]+)*).*/\1/i' || true)
+version=$(grep -iE '^FROM[[:space:]]+node:[0-9]' "$dockerfile" | head -1 | sed -E 's/^[Ff][Rr][Oo][Mm][[:space:]]+node:([0-9]+(\.[0-9]+)*).*/\1/' || true)
 
 if [ -z "$version" ]; then
   echo "SOURCE=dockerfile"

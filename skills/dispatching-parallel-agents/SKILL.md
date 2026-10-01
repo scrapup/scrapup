@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: Dispatches one subagent per independent problem domain in a single turn and integrates their results. Use when facing 2+ independent tasks without shared state, e.g. "investigate these failures in parallel", "run these in parallel". Do NOT use for executing a written plan task-by-task (use /scrapup:subagent-driven-development) or for requesting a review (use /scrapup:requesting-code-review).
 ---
 
 # Dispatching Parallel Agents
@@ -12,6 +12,8 @@ When you have multiple independent tasks or problem domains (failing tests, revi
 **Core principle:** Dispatch one agent per independent task/problem domain. Run them concurrently.
 
 **What produces real concurrency:** Emit all agent calls (Task/Agent) in the SAME turn/message, without waiting for any to return before issuing the next. Agent calls made across separate turns — issuing one, reading its result, then issuing the next — run in series, not in parallel, regardless of intent.
+
+**Fallbacks:** If no subagent tool is available, run the domains sequentially. To isolate agents that need the same files, give each its own worktree (/scrapup:using-git-worktrees).
 
 ## When to Use
 
@@ -39,9 +41,11 @@ digraph when_to_use {
 - No shared state between the agents (no overlapping files or resources)
 
 **Don't use when:**
-- Domains are related (handling one might resolve or alter others)
-- You need to understand full system state first
-- Agents would interfere with each other (same files, same resources)
+- **Related domains:** handling one might resolve or alter others - investigate together first
+- **Need full context:** understanding requires seeing the entire system state first
+- **Exploratory debugging:** you don't know what's broken yet
+- **Shared state:** agents would interfere (same files, same resources)
+- **Written plan to execute task-by-task:** use /scrapup:subagent-driven-development
 
 ## The Pattern
 
@@ -59,37 +63,37 @@ Each domain must be independent — handling one does not affect another, and th
 Each agent gets:
 - **Specific scope:** One domain (test file, review target, or subsystem)
 - **Clear goal:** The concrete outcome expected
-- **Constraints:** Files/resources it must not touch (preserve isolation)
+- **Constraints:** Files/resources it must not touch (preserve isolation); no commits/pushes or destructive commands unless the task states it
 - **Expected output:** A return summary with the minimum fields below
 
 ### 3. Dispatch in Parallel
 
-```typescript
-// In Claude Code / AI environment.
-// All three calls MUST be emitted in the SAME turn/message, with no wait between them.
-Task("Investigate auth subsystem failure")
-Task("Review payment module diff")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// Concurrent only because they were dispatched together in one turn.
-// Issuing them across separate turns would serialize them.
+```text
+Pseudo-code: three Agent (Task) tool calls emitted in the SAME turn/message, no wait between them.
+Agent("Investigate auth subsystem failure")
+Agent("Review payment module diff")
+Agent("Fix tool-approval-race-conditions.test.ts failures")
+Concurrent only because they were dispatched together in one turn.
+Issuing them across separate turns would serialize them.
 ```
 
 ### 4. Review and Integrate
 
 Require each agent's return summary to carry these minimum fields, so the integration step can check for conflicts:
-- **Root cause** — what the agent found
+- **Root cause / Findings** — what the agent found, supported by `file:line` references or test output; state 'not determined' when unverified
 - **Files changed** — exact paths touched
 - **Change** — what was modified
 - **Residual risks** — anything left unverified or potentially affecting other domains
 
 When agents return:
-- Read each summary
-- Cross-check the "Files changed" sets for overlap (same path edited by two agents = conflict)
-- Run the full test suite
-- Integrate all changes
+1. **Review each summary** - confirm Root cause / Findings, Files changed, Change, and Residual risks are present
+2. **Check for conflicts** - cross-check the "Files changed" sets for overlap (same path edited by two agents = conflict; apply the degraded path)
+3. **Run the full test suite** when any agent changed files; otherwise skip
+4. **Spot check** - agents can make systematic errors
+5. **Integrate** all changes
 
 **Degraded path:**
-- **Edit conflict** (two agents touched the same file) — discard the conflicting edits and re-run the affected domains in sequence so the second sees the first's result.
+- **Edit conflict** (two agents touched the same file) — ask the user before discarding edits; then discard the conflicting edits and re-run the affected domains in sequence so the second sees the first's result.
 - **Agent does not return** (no summary, timeout, error) — re-dispatch that single domain; if it fails again, drop it from the parallel batch and handle it sequentially or escalate to the user.
 
 ## Agent Prompt Structure
@@ -117,29 +121,24 @@ These are timing/race condition issues. Your task:
 
 Do NOT just increase timeouts - find the real issue.
 
-Return: Summary of what you found and what you fixed.
+Constraints: touch only src/agents/agent-tool-abort.test.ts and the abort implementation.
+
+Return: Root cause; Files changed (exact paths); Change; Residual risks.
 ```
 
 ## Common Mistakes
 
-**❌ Too broad:** "Fix all the tests" - agent gets lost
-**✅ Specific:** "Fix agent-tool-abort.test.ts" - focused scope
+**BAD - Too broad:** "Fix all the tests" - agent gets lost
+**GOOD - Specific:** "Fix agent-tool-abort.test.ts" - focused scope
 
-**❌ No context:** "Fix the race condition" - agent doesn't know where
-**✅ Context:** Paste the error messages and test names
+**BAD - No context:** "Fix the race condition" - agent doesn't know where
+**GOOD - Context:** Paste the error messages and test names
 
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
+**BAD - No constraints:** Agent might refactor everything
+**GOOD - Constraints:** "Do NOT change production code" or "Fix tests only"
 
-**❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
-
-## When NOT to Use
-
-**Related failures:** Fixing one might fix others - investigate together first
-**Need full context:** Understanding requires seeing entire system
-**Exploratory debugging:** You don't know what's broken yet
-**Shared state:** Agents would interfere (editing same files, using same resources)
+**BAD - Vague output:** "Fix it" - you don't know what changed
+**GOOD - Specific:** "Return: Root cause; Files changed (exact paths); Change; Residual risks"
 
 ## Real Example (illustration — test debugging)
 
@@ -167,13 +166,3 @@ Agent 3 → Fix tool-approval-race-conditions.test.ts
 - Agent 3: Added wait for async tool execution to complete
 
 **Integration:** All fixes independent, no conflicts, full suite green
-
-**Time saved:** 3 problems solved in parallel vs sequentially
-
-## Verification
-
-After agents return:
-1. **Review each summary** - Confirm root cause, files changed, change, and residual risks are present
-2. **Check for conflicts** - Cross-check "Files changed" sets; same path edited twice = conflict (apply the degraded path)
-3. **Run full suite** - Verify all changes work together
-4. **Spot check** - Agents can make systematic errors

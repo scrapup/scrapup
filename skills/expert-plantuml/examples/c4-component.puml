@@ -1,6 +1,7 @@
 @startuml
 !include <C4/C4_Component>
 title C4 L3 - Service components
+' Illustrative technologies - derive real ones from context.
 
 Container_Boundary(api, "Service Name") {
     Component(controller, "Controller", "NestJS/Fastify", "Validates DTOs and routes")

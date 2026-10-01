@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Executes a written implementation plan in the current session by dispatching one implementer subagent per task, followed by spec-compliance and code-quality reviews. Use when the user says "execute this plan here", "run the plan with subagents". Do NOT use for SDD TF/US (use /scrapup:forge), separate-session execution (use /scrapup:executing-plans), or writing plans (use /scrapup:writing-plans).
 ---
 
 # Subagent-Driven Development
@@ -9,15 +9,7 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
 
-## Alinhamento ao ecossistema scrapup (autoritativo)
-
-No ecossistema scrapup, esta skill segue a governança canônica abaixo, que **sobrepõe** os prompts genéricos das secções seguintes:
-
-- **Readiness:** antes de despachar o primeiro implementer, verificar o toolchain e o baseline: ler `package.json` (scripts `test` e `lint`), rodar ambos uma vez no estado limpo e registrar o resultado no saga (nota `baseline`, tipo `context`); não implementar se estiver vermelho sem decisão do utilizador.
-- **Implementação:** o implementer subagent segue /scrapup:test-driven-agentic-development (IMPACT → VERIFY → CORRECT → cobertura), **não** TDD genérico.
-- **Review de qualidade:** usar /scrapup:multi-spec-review (9 lentes) como etapa de qualidade — por tarefa quando o escopo justificar e como review final consolidado. A revisão de **spec compliance** por tarefa permanece (confirma a fatia do plano). O multi-spec-review emite `decision = GO | GO_CONDITIONAL | NO-GO` (não `approve`/`request_changes`); o controlador mapeia: **GO** → fecha a tarefa; **GO_CONDITIONAL** (há Major) → resolver as condições e re-despachar antes de marcar completa; **NO-GO** (há Blocker/Critical) → fix-loop obrigatório até GO.
-- **Estado:** progresso, decisões e handoffs persistem no `mcp-saga` (fonte canônica via /scrapup:saga-session); `TodoWrite` é espelho local opcional, nunca a verdade.
-- **Fronteira:** para TF/US do fluxo SDD, preferir /scrapup:forge (que executa cada TF em contexto limpo). Esta skill é para **planos escritos genéricos** executados na sessão atual.
+**Scope:** generic written plans executed in the current session. For TF/US of the SDD flow, use /scrapup:forge (runs each TF in a clean context).
 
 ## When to Use
 
@@ -43,9 +35,13 @@ digraph when_to_use {
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
 - Two-stage review after each task: spec compliance first, then code quality
-- Faster iteration (no human-in-loop between tasks)
+- Faster iteration (no user checkpoint between tasks unless BLOCKED or escalated)
 
 ## The Process
+
+**Readiness (before the first implementer):** read `package.json` (`test` and `lint` scripts), run both once on the clean tree and record the result as the `baseline`. Persist in saga via /scrapup:saga-session when available; otherwise track in the agent's todo list and record the baseline in the controller context. If the baseline is red, do not implement without a decision from the user (Architect-Validator).
+
+**State:** task progress, decisions and handoffs follow the same rule — saga via /scrapup:saga-session when available; otherwise the agent's todo list plus the controller context.
 
 **Precondition — plan must be sliceable (abstain otherwise):** after reading the plan, confirm it yields discrete tasks that are independent enough to dispatch one per subagent. If the plan has no extractable tasks, or its steps are too tightly coupled to run in isolation, **stop** — do not invent a slicing. Refer back to /scrapup:writing-plans to produce a properly sliced plan, then resume.
 
@@ -62,19 +58,18 @@ digraph process {
         "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality stage (/scrapup:multi-spec-review)" [shape=box];
-        "Code quality decision == GO?" [shape=diamond];
-        "GO_CONDITIONAL: resolve conditions, re-dispatch" [shape=box];
-        "NO-GO: implementer fixes quality issues (fix-loop)" [shape=box];
-        "Mark task complete in saga (+ TodoWrite mirror)" [shape=box];
+        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
+        "Any Critical or Important issue?" [shape=diamond];
+        "Implementer subagent fixes quality issues" [shape=box];
+        "Mark task complete (saga or todo list)" [shape=box];
     }
 
-    "Check toolchain and baseline, read plan, extract all tasks, persist in saga (+ TodoWrite mirror)" [shape=box];
+    "Check toolchain and baseline, read plan, extract all tasks, persist (saga or todo list)" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch /scrapup:multi-spec-review for entire implementation" [shape=box];
+    "Dispatch final code reviewer for entire implementation" [shape=box];
     "Use /scrapup:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Check toolchain and baseline, read plan, extract all tasks, persist in saga (+ TodoWrite mirror)" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Check toolchain and baseline, read plan, extract all tasks, persist (saga or todo list)" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -83,17 +78,15 @@ digraph process {
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
     "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality stage (/scrapup:multi-spec-review)" [label="yes"];
-    "Dispatch code quality stage (/scrapup:multi-spec-review)" -> "Code quality decision == GO?";
-    "Code quality decision == GO?" -> "NO-GO: implementer fixes quality issues (fix-loop)" [label="NO-GO (Blocker/Critical)"];
-    "Code quality decision == GO?" -> "GO_CONDITIONAL: resolve conditions, re-dispatch" [label="GO_CONDITIONAL (Major)"];
-    "NO-GO: implementer fixes quality issues (fix-loop)" -> "Dispatch code quality stage (/scrapup:multi-spec-review)" [label="re-review"];
-    "GO_CONDITIONAL: resolve conditions, re-dispatch" -> "Dispatch code quality stage (/scrapup:multi-spec-review)" [label="re-review"];
-    "Code quality decision == GO?" -> "Mark task complete in saga (+ TodoWrite mirror)" [label="GO"];
-    "Mark task complete in saga (+ TodoWrite mirror)" -> "More tasks remain?";
+    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
+    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Any Critical or Important issue?";
+    "Any Critical or Important issue?" -> "Implementer subagent fixes quality issues" [label="yes"];
+    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Any Critical or Important issue?" -> "Mark task complete (saga or todo list)" [label="no"];
+    "Mark task complete (saga or todo list)" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch /scrapup:multi-spec-review for entire implementation" [label="no"];
-    "Dispatch /scrapup:multi-spec-review for entire implementation" -> "Use /scrapup:finishing-a-development-branch";
+    "More tasks remain?" -> "Dispatch final code reviewer for entire implementation" [label="no"];
+    "Dispatch final code reviewer for entire implementation" -> "Use /scrapup:finishing-a-development-branch";
 }
 ```
 
@@ -101,16 +94,11 @@ digraph process {
 
 - `./implementer-prompt.md` — **[active]** Dispatch implementer subagent (follows /scrapup:test-driven-agentic-development)
 - `./spec-reviewer-prompt.md` — **[active]** Dispatch spec compliance reviewer subagent (per-task stage, always kept)
-- `./code-quality-reviewer-prompt.md` — **[conditional]** Generic code-quality reviewer. Superseded inside the scrapup ecosystem by /scrapup:multi-spec-review; use only outside it.
+- `./code-quality-reviewer-prompt.md` — **[active]** Dispatch code quality reviewer subagent (fills /scrapup:requesting-code-review `code-reviewer.md`)
 
-**Selection criterion (code quality stage) — observable, not by preference:**
+**Mapping the code-quality result:** any Critical or Important issue → implementer fixes, then re-review; otherwise (only Minor, or none) → mark the task complete. Treat `Ready to merge: Invalid range` as a dispatch error: fix the SHAs and re-dispatch.
 
-| Condition (check it, do not guess) | Code-quality reviewer to dispatch |
-|------------------------------------|-----------------------------------|
-| The repo is the scrapup plugin, OR `/scrapup:multi-spec-review` is invocable (skill resolves), OR canonical governance applies | `/scrapup:multi-spec-review` (9 lenses) — `./code-quality-reviewer-prompt.md` is NOT used |
-| Running this skill standalone outside the plugin AND `/scrapup:multi-spec-review` does not resolve | `./code-quality-reviewer-prompt.md` |
-
-If unsure whether `/scrapup:multi-spec-review` resolves, attempt it first; fall back to the generic template only on a hard unavailability.
+**Spec-review result:** `verdict: COMPLIANT` → proceed to code quality; `ISSUES` → implementer fixes, then re-review; `CANNOT_VERIFY` → resolve the cause (wrong range, code not committed) before re-dispatching.
 
 ## Example Workflow
 
@@ -119,7 +107,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create TodoWrite with all tasks]
+[Persist all tasks (saga via /scrapup:saga-session, or the todo list)]
 
 Task 1: Hook installation script
 
@@ -128,7 +116,7 @@ Task 1: Hook installation script
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
 
-You: "User level (~/.config/superpowers/hooks/)"
+You: "User level (~/.config/<tool>/hooks/)"
 
 Implementer: "Got it. Implementing now..."
 [Later] Implementer:
@@ -138,10 +126,10 @@ Implementer: "Got it. Implementing now..."
   - Committed
 
 [Dispatch spec compliance reviewer]
-Spec reviewer: ✅ Spec compliant - all requirements met, nothing extra
+Spec reviewer: verdict: COMPLIANT - all requirements met, nothing extra
 
-[Get git SHAs, dispatch /scrapup:multi-spec-review for the task diff]
-multi-spec-review: decision=GO. Strengths: good test coverage, clean. No blocking findings.
+[Get git SHAs, dispatch code quality reviewer (./code-quality-reviewer-prompt.md)]
+Code reviewer: Strengths: good test coverage, clean. Issues: none. Ready to merge: Yes
 
 [Mark Task 1 complete]
 
@@ -158,67 +146,42 @@ Implementer:
   - Committed
 
 [Dispatch spec compliance reviewer]
-Spec reviewer: ❌ Issues:
-  - Missing: Progress reporting (spec says "report every 100 items")
-  - Extra: Added --json flag (not requested)
+Spec reviewer: verdict: ISSUES
+  - Missing: Progress reporting (spec says "report every 100 items") (recovery.ts:42)
+  - Extra: Added --json flag (not requested) (cli.ts:17)
 
 [Implementer fixes issues]
 Implementer: Removed --json flag, added progress reporting
 
 [Spec reviewer reviews again]
-Spec reviewer: ✅ Spec compliant now
+Spec reviewer: verdict: COMPLIANT
 
-[Get git SHAs, dispatch /scrapup:multi-spec-review for the task diff]
-multi-spec-review: decision=GO_CONDITIONAL. Finding (Major): magic number (100). Condition: extract constant.
+[Get git SHAs, dispatch code quality reviewer (./code-quality-reviewer-prompt.md)]
+Code reviewer: Issues: Important (Should Fix): magic number (100) (recovery.ts:42). Ready to merge: With fixes
 
-[Implementer resolves the condition before marking the task complete]
+[Implementer fixes the Important issue before the task is marked complete]
 Implementer: Extracted PROGRESS_INTERVAL constant
 
-[Re-dispatch /scrapup:multi-spec-review]
-multi-spec-review: decision=GO
+[Re-dispatch code quality reviewer]
+Code reviewer: Issues: none. Ready to merge: Yes
 
 [Mark Task 2 complete]
 
 ...
 
 [After all tasks]
-[Dispatch final /scrapup:multi-spec-review for the entire implementation]
-multi-spec-review: decision=GO. All requirements met, ready to merge
+[Dispatch final code reviewer for the entire implementation]
+Code reviewer: All requirements met. Ready to merge: Yes
 
 Done!
 ```
 
 ## Advantages
 
-**vs. Manual execution:**
-- Subagents follow TDAD naturally (/scrapup:test-driven-agentic-development)
-- Fresh context per task (no confusion)
-- Parallel-safe (subagents don't interfere)
-- Subagent can ask questions (before AND during work)
-
-**vs. Executing Plans:**
-- Same session (no handoff)
-- Continuous progress (no waiting)
-- Review checkpoints automatic
-
-**Efficiency gains:**
-- No file reading overhead (controller provides full text)
-- Controller curates exactly what context is needed
-- Subagent gets complete information upfront
-- Questions surfaced before work begins (not after)
-
-**Quality gates:**
-- Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
-- Review loops ensure fixes actually work
-- Spec compliance prevents over/under-building
-- Code quality ensures implementation is well-built
-
-**Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
+- Fresh context per task (no confusion); the controller provides full task text, so subagents do not read the plan file
+- Subagents can ask questions before and during work
+- Two-stage review (spec compliance, then code quality) catches over/under-building and poor implementation early
+- Cost: implementer + 2 reviewers per task, plus review loops — cheaper than debugging later
 
 ## Red Flags
 
@@ -233,7 +196,7 @@ Done!
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
 - Skip review loops (reviewer found issues = implementer fixes = review again)
 - Let implementer self-review replace actual review (both are needed — the author is blind to their own gaps)
-- **Start code quality review before spec compliance is ✅** (wrong order — polishing code that solves the wrong problem wastes the loop)
+- **Start code quality review before spec compliance is `COMPLIANT`** (wrong order — polishing code that solves the wrong problem wastes the loop)
 - Move to next task while either review has open issues (an unfinished task compounds into the next one)
 
 **If subagent asks questions:**
@@ -246,8 +209,12 @@ Done!
 - Reviewer reviews again
 - Repeat until approved
 - Don't skip the re-review
+- After 3 fix cycles without convergence, stop and escalate to the user (Architect-Validator) with the open issues
 
-**If subagent fails task:**
+**If implementer reports BLOCKED:**
+- Report to the user (Architect-Validator) with the blocker reason; do not proceed to the next task
+
+**If subagent fails task (not BLOCKED):**
 - Dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
 
@@ -256,12 +223,12 @@ Done!
 **Required workflow skills:**
 - **/scrapup:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **/scrapup:writing-plans** - Creates the plan this skill executes
-- **/scrapup:multi-spec-review** - Canonical quality review (9 lentes); per-task quando o escopo justificar e como review final
-- **/scrapup:saga-session** - Canonical state (tasks, decisões, handoffs) in `mcp-saga`
+- **/scrapup:requesting-code-review** - Code-quality review template (`code-reviewer.md`), per task and as the final review
+- **/scrapup:saga-session** - State (tasks, decisions, handoffs) when available; otherwise the agent's todo list
 - **/scrapup:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**
-- **/scrapup:test-driven-agentic-development** - Implementer subagents follow TDAD (IMPACT → VERIFY → CORRECT → cobertura) for each task
+- **/scrapup:test-driven-agentic-development** - Implementer subagents follow TDAD for each task
 
 **Alternative workflow:**
 - **/scrapup:executing-plans** - Use for parallel session instead of same-session execution

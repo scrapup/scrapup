@@ -71,7 +71,7 @@ Lines 3 and 12 are covered; lines 20-21 are pre-existing and untouched, so they 
 ```text
 tdad_result: SUBMIT_READY
 reason: -
-impact_method: [rg]
+impact_method: rg
 tests_run: test/price.test.js, test/checkout.test.js
 pre_existing_failures: none
 coverage: 100
@@ -82,6 +82,18 @@ escalations: none
 ## 2. Feature with module propagation (NestJS + Jest)
 
 **Feature:** global rate limiting via a guard registered as `APP_GUARD` in `AppModule`.
+
+**SNAPSHOT** — run the tests related to the target files before editing:
+
+```bash
+$ npx jest --listTests --findRelatedTests src/app.module.ts
+src/app.module.spec.ts
+test/app.e2e-spec.ts
+test/auth.e2e-spec.ts
+test/health.e2e-spec.ts
+$ npx jest src/app.module.spec.ts test/app.e2e-spec.ts test/auth.e2e-spec.ts test/health.e2e-spec.ts
+# Tests: 18 passed, 18 total   → no pre-existing failures
+```
 
 **IMPACT** — runner-native:
 
@@ -102,4 +114,17 @@ A global guard reaches every e2e test that boots `AppModule`; the runner found t
 
 **COVERAGE** — `npm run test:cov -- --collectCoverageFrom=src/common/guards/rate-limit.guard.ts`, then compare the uncovered lines with `git diff -U0` for that file: the new `excludedPaths.includes(request.path)` branch is covered by a new unit test for an excluded and a non-excluded path.
 
-**SUBMIT** — full suite: no failure outside the SNAPSHOT.
+**Prove the test can fail** — remove the `excludedPaths.includes(request.path)` check, run `src/common/guards/rate-limit.guard.spec.ts`: the excluded-path test fails with 429. Restore the check.
+
+**SUBMIT** — full suite: no failure outside the SNAPSHOT (none).
+
+```text
+tdad_result: SUBMIT_READY
+reason: -
+impact_method: runner-native
+tests_run: src/app.module.spec.ts, src/common/guards/rate-limit.guard.spec.ts, test/app.e2e-spec.ts, test/auth.e2e-spec.ts, test/health.e2e-spec.ts
+pre_existing_failures: none
+coverage: 100
+iterations: 1
+escalations: none
+```

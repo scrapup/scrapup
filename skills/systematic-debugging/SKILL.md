@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: Root-causes bugs, test failures and unexpected behavior through a four-phase investigation before any fix is proposed. Use when the user says "debug this", "why is this failing", "find the root cause", "this test is flaky", or after repeated failed fix attempts. Do NOT use for implementing a known fix with regression tests (use /scrapup:test-driven-agentic-development) or for confirming a fix before claiming done (use /scrapup:verification-before-completion).
 ---
 
 # Systematic Debugging
@@ -107,6 +107,8 @@ You MUST complete each phase before proceeding to the next.
 
    **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)
 
+   **Remove diagnostic instrumentation before the fix commit.**
+
 5. **Trace Data Flow**
 
    **WHEN error is deep in call stack:**
@@ -176,7 +178,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `scrapup:test-driven-agentic-development` skill for writing proper failing tests
+   - Use the `/scrapup:test-driven-agentic-development` skill for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -208,7 +210,7 @@ You MUST complete each phase before proceeding to the next.
    - Are we "sticking with it through sheer inertia"?
    - Should we refactor architecture vs. continue fixing symptoms?
 
-   **Discuss with your human partner before attempting more fixes**
+   **Discuss with the user (Architect-Validator) before attempting more fixes**
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
@@ -229,9 +231,9 @@ If you catch yourself thinking:
 
 **ALL of these mean: STOP. Return to Phase 1.**
 
-**If 3+ fixes failed:** Question the architecture (see Phase 4.5)
+**If 3+ fixes failed:** Question the architecture (see Phase 4, step 5)
 
-## your human partner's Signals You're Doing It Wrong
+## User Signals You're Doing It Wrong
 
 **Watch for these redirections:**
 - "Is that not happening?" - You assumed without verifying
@@ -273,7 +275,30 @@ If systematic investigation reveals issue is truly environmental, timing-depende
 3. Implement appropriate handling (retry, timeout, error message)
 4. Add monitoring/logging for future investigation
 
-**But:** 95% of "no root cause" cases are incomplete investigation.
+**But:** most "no root cause" conclusions are incomplete investigation. Re-check Phase 1 before settling on one.
+
+## Output
+
+End every investigation with this report. Callers branch on `status`: `/scrapup:forge` and `/scrapup:test-driven-agentic-development` resume at IMPACT on `RESOLVED` or `NO_ROOT_CAUSE`, and stop to involve the user on `ARCHITECTURE_REVIEW` or `NEEDS_USER`.
+
+```yaml
+root_cause: "<one-sentence claim>"     # with location: path/to/file.ts:42
+evidence:                              # observations that prove the claim (logs, traces, diffs, repro output)
+  - "<evidence item>"
+hypotheses_tested:                     # every hypothesis from Phase 3, in order
+  - hypothesis: "<I think X because Y>"
+    result: confirmed | rejected
+fix: "<change made at the source, or 'none'>"
+failing_test: "<path::test name that failed before and passes after, or 'none'>"
+status: RESOLVED | ARCHITECTURE_REVIEW | NO_ROOT_CAUSE | NEEDS_USER
+```
+
+| Status | When |
+|--------|------|
+| `RESOLVED` | Root cause confirmed, failing test written, fix verified |
+| `ARCHITECTURE_REVIEW` | 3+ fixes failed (Phase 4, step 5); escalate to the user (Architect-Validator) |
+| `NO_ROOT_CAUSE` | Investigation complete, cause is environmental/timing/external; handling + monitoring added |
+| `NEEDS_USER` | Blocked on information, access or a decision only the user can provide |
 
 ## Supporting Techniques
 
@@ -284,13 +309,5 @@ These techniques are part of systematic debugging and available in this director
 - **[`condition-based-waiting.md`](condition-based-waiting.md)** - Replace arbitrary timeouts with condition polling
 
 **Related skills:**
-- **scrapup:test-driven-agentic-development** - For creating failing test case (Phase 4, Step 1)
-- **scrapup:verification-before-completion** - Verify fix worked before claiming success
-
-## Real-World Impact
-
-From debugging sessions:
-- Systematic approach: 15-30 minutes to fix
-- Random fixes approach: 2-3 hours of thrashing
-- First-time fix rate: 95% vs 40%
-- New bugs introduced: Near zero vs common
+- **`/scrapup:test-driven-agentic-development`** - For creating failing test case (Phase 4, Step 1)
+- **`/scrapup:verification-before-completion`** - Verify fix worked before claiming success

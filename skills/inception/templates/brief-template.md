@@ -1,83 +1,86 @@
-# Brief de Inception — {{Título da iniciativa}}
+# Inception Brief — {{Initiative title}}
 
-> **Template do `brief.md`** — artefato **único e completo** da fase de **Inception**. Profundidade
-> **rasa** ("inch deep"): identifica e fundamenta, não detalha (detalhe → Elaboration/`spec.md`/`plan.md`).
-> Produzido em **camadas validadas** (cadeia de lastro): cada seção é preenchida e **validada com o
-> utilizador** antes da próxima. **Não inferir lacunas — perguntar.** Convenções de ID: `UCnnnn`,
-> `FTnnnn`, `RKnnnn` (4 dígitos, a partir de 0001).
+> **`brief.md` template** — the **single, complete** artifact of the **Inception** phase.
+> **Shallow** depth ("inch deep"): identify and ground, do not detail (detail →
+> Elaboration/`spec.md`/`plan.md`). Produced in **validated layers** (grounding chain): each section
+> is filled and **validated with the user** before the next. **Do not infer gaps — ask.** ID
+> conventions: `UCnnnn`, `FTnnnn`, `RKnnnn` (4 digits, starting at 0001).
 
-| Campo | Valor |
+| Field | Value |
 |-------|-------|
-| Fase | Inception |
-| Marco-alvo | LCO (go/no-go) |
-| Status | `draft` \| `em validação` \| `LCO aprovado` |
-| Autor / Validador | {{humano-arquiteto/validador}} |
-| Data | {{AAAA-MM-DD}} |
+| Phase | Inception |
+| Target milestone | LCO (go/no-go) |
+| Status | `draft` \| `in validation` \| `LCO approved` |
+| Author / Validator | {{user (Architect-Validator)}} |
+| Date | {{YYYY-MM-DD}} |
 
 ---
 
-## 1. Lastro — referências brutas (fontes do pedido)
+## 1. Grounding — raw references (request sources)
 
-> _Camada 1. As fontes (scraps) que originam a iniciativa. O brief **destila** estas fontes — o link não
-> dispensa a síntese. Anexar conteúdo crítico (link rot); registrar data de captura._
+> _Layer 1. The sources (scraps) that originate the initiative. The brief **distills** these sources
+> — a link does not replace the synthesis. Attach critical content (link rot); record the capture
+> date._
 
-| Fonte | Tipo | Link / anexo | Capturado em |
-|-------|------|--------------|--------------|
-| {{descrição}} | {{ClickUp \| Slack \| transcrição \| e-mail \| prompt \| doc}} | `{{link/anexo}}` | {{AAAA-MM-DD}} |
+| Source | Type | Link / attachment | Captured on |
+|--------|------|-------------------|-------------|
+| {{description}} | {{issue \| message \| transcript \| email \| prompt \| doc}} | `{{link/attachment}}` | {{YYYY-MM-DD}} |
 
 ## 2. Vision
 
-> _Camada 2 (fundacional — validar cedo). O "porquê". Sem business case financeiro aqui (§10)._
+> _Layer 2 (foundational — validate early). The "why". No financial business case here (§9)._
 
-- **Problema:** {{dor/necessidade}}
-- **Stakeholders:** {{quem é afetado / decide}}
-- **Necessidades-chave:** {{o que precisa existir}}
-- **Oportunidade:** {{ganho esperado}}
-- **Critérios de sucesso (provisórios):** {{como saberemos que deu certo}}
+- **Problem:** {{pain/need}}
+- **Stakeholders:** {{who is affected / decides}}
+- **Key needs:** {{what must exist}}
+- **Opportunity:** {{expected gain}}
+- **Success criteria (provisional):** {{how we will know it worked}}
 
-## 3. Domain model / Glossário
+## 3. Domain model / Glossary
 
-> _Camada 3. Contexto que ancora os use cases. **Linguagem ubíqua** (DDD). Leve: glossário + esboço._
+> _Layer 3. Context that anchors the use cases. **Ubiquitous language** (DDD). Light: glossary +
+> sketch._
 
-| Termo | Definição |
-|-------|-----------|
-| {{Termo}} | {{definição}} |
+| Term | Definition |
+|------|------------|
+| {{Term}} | {{definition}} |
 
-> _Opcional: diagrama de classes de domínio (UML) e/ou state machine de um conceito com ciclo de vida._
+> _Optional: domain class diagram (UML) and/or state machine of a concept with a lifecycle._
 
 ```plantuml
 @startuml
-' domain model conceitual (não solução)
+' conceptual domain model (not solution)
 @enduml
 ```
 
 ## 4. Feature list (candidate requirements)
 
-> _Camada 4. Lista para planejar. Prioridade + risco por item (alimenta a ordenação risk-driven)._
+> _Layer 4. List for planning. Priority + risk per item (feeds risk-driven ordering)._
 
-| ID | Feature | Status | Custo est. | Prioridade | Risco |
-|----|---------|--------|-----------|------------|-------|
-| FT0001 | {{feature}} | proposto | {{S/M/L}} | {{crítica/importante/ancilar}} | {{baixo/médio/alto}} |
+| ID | Feature | Status | Est. cost | Priority | Risk |
+|----|---------|--------|-----------|----------|------|
+| FT0001 | {{feature}} | proposed | {{S/M/L}} | {{critical/important/ancillary}} | {{low/medium/high}} |
 
 ## 5. Risk list + rating
 
-> _Camada 5. Campos (UP, [p.362-363]): Description · Priority(rating) · Impact · Monitor · Contingency.
-> **Rating = Priority = `critical`/`significant`/`routine`** (de Prob×Impacto — ver SKILL "Rating de
-> risco"). Dirige a ordem das iterações (crítico cedo)._
+> _Layer 5. Fields (UP, [p.362-363]): Description · Priority (rating) · Impact · Monitor ·
+> Responsibility · Contingency. **Rating = Priority = `critical`/`significant`/`routine`** (from
+> Probability×Impact — see SKILL "Risk rating"). Drives iteration order (critical early)._
 
-| ID | Risco | Prob. | Impacto | Rating (Priority) | Mitigação / contingência |
-|----|-------|-------|---------|-------------------|---------------------------|
-| RK0001 | {{risco}} | {{baixa/média/alta}} | {{baixo/médio/alto}} | {{routine/significant/critical}} | {{mitigação}} |
+| ID | Description | Priority (rating) | Impact | Monitor | Responsibility | Contingency |
+|----|-------------|-------------------|--------|---------|----------------|-------------|
+| RK0001 | {{risk}} — prob. {{low/medium/high}} | {{routine/significant/critical}} | {{low/medium/high}} — {{affected parts}} | {{signal to watch}} | {{owner}} | {{mitigation/contingency}} |
 
 ## 6. Use-case model
 
-> _Camada 6. Espinha do UP (use-case driven). Atores + use cases + relações. Spec **rasa** por UC._
+> _Layer 6. Backbone of the UP (use-case driven). Actors + use cases + relationships. **Shallow**
+> spec per UC._
 
-**Atores (catálogo)**
+**Actors (catalog)**
 
-| Ator | Tipo | Papel |
-|------|------|-------|
-| {{Ator}} | {{primário/secundário}} | {{papel}} |
+| Actor | Type | Role |
+|-------|------|------|
+| {{Actor}} | {{primary/secondary}} | {{role}} |
 
 ```plantuml
 @startuml
@@ -85,64 +88,67 @@ left to right direction
 @enduml
 ```
 
-### Spec básica por use case (rasa)
+### Basic spec per use case (shallow)
 
-> _Estrutura UML: ator · **pré-condições** · fluxo principal (lista ordenada `1, 2, 2.1, 3`) ·
-> **pós-condições** · relações. Fluxos alternativos/exceções → `spec.md` (Elaboration)._
+> _UML structure: actor · **preconditions** · main flow (ordered list `1, 2, 2.1, 3`) ·
+> **postconditions** · relationships. Alternative flows/exceptions → `spec.md` (Elaboration)._
 
-**UC0001 · {{Nome}}** — *({{FTxxxx}}, risco {{nível}})*
-- Ator: {{ator}}.
-- Pré-condições: {{estado exigido}}.
-- Breve: {{1 linha}}.
-- Fluxo principal:
-  1. {{passo}}
-  2. {{passo}}
-     - 2.1. {{sub-passo, se houver}}
-  3. {{passo}}
-- Pós-condições: {{estado garantido; marcar read-only se consulta}}.
+**UC0001 · {{Name}}** — *({{FTxxxx}}, risk {{level}})*
+- Actor: {{actor}}.
+- Preconditions: {{required state}}.
+- Brief: {{1 line}}.
+- Main flow:
+  1. {{step}}
+  2. {{step}}
+     - 2.1. {{sub-step, if any}}
+  3. {{step}}
+- Postconditions: {{guaranteed state; mark read-only if a query}}.
 
-### Relações entre use cases
+### Relationships between use cases
 
-> _Pré-condição (dependência de estado) · «include» (sub-comportamento sempre invocado) · «extend»
-> (condicional) · generalização. Ordem de construção é risk-driven (Ranking), não grafo de execução aqui._
+> _Precondition (state dependency) · «include» (sub-behavior always invoked) · «extend»
+> (conditional) · generalization. Build order is risk-driven (Ranking), not an execution graph
+> here._
 
-- {{ex.: UC0002 e UC0003 exigem Cliente autenticado (UC0001) — pré-condição}}
+- {{e.g.: UC0002 and UC0003 require an authenticated Customer (UC0001) — precondition}}
 
-### Ranking de use cases (ordem por risco)
+### Use-case ranking (order by risk)
 
-1. {{UCxxxx — fundacional/risco alto}}
+1. {{UCxxxx — foundational/high risk}}
 2. {{...}}
 
-### Rastreabilidade (trace)
+### Traceability (trace)
 
-> _Montante → fonte (Lastro §1); jusante → teste (`spec.md`). A matriz cresce com o ciclo._
+> _Upstream → source (Grounding §1); downstream → test (`spec.md`). The matrix grows with the
+> cycle._
 
-| Feature | Use case | Risco |
-|---------|----------|-------|
+| Feature | Use case | Risk |
+|---------|----------|------|
 | {{FTxxxx}} | {{UCxxxx}} | {{RKxxxx}} |
 
-## 7. Requisitos suplementares (não-funcionais)
+## 7. Supplementary requirements (non-functional)
 
-> _Camada 7. Taxonomia FURPS+ / "-ilities". NFR específico de um UC ancora-se a ele; demais sistêmicos._
+> _Layer 7. FURPS+ / "-ilities" taxonomy. A UC-specific NFR anchors to that UC; the rest are
+> systemic._
 
-| Categoria | Requisito (provisório) |
-|-----------|------------------------|
+| Category | Requirement (provisional) |
+|----------|---------------------------|
 | Functionality | {{...}} |
 | Usability | {{...}} |
 | Reliability | {{...}} |
 | Performance | {{...}} |
-| Supportability | {{observabilidade}} |
-| + Constraints | {{stack/LGPD/segurança}} |
+| Supportability | {{observability}} |
+| + Constraints | {{stack / applicable data-protection law (e.g., GDPR) / security}} |
 
-## 8. Arquitetura candidata (direção, provisória)
+## 8. Candidate architecture (direction, provisional)
 
-> _Camada 8. Direção **por promessa** (candidata, não provada). ADR formal e prova → Elaboration.
-> Diagramas: **C4 N1 (Context) + N2 (Container raso)**. **N3/Component e sequence de componentes →
+> _Layer 8. Direction **by promise** (candidate, not proven). Formal ADR and proof → Elaboration.
+> Diagrams: **C4 L1 (Context) + L2 (shallow Container)**. **L3/Component and component sequence →
 > Elaboration.**_
 
-- **Estilo / decisões de direção:** {{ex.: monolito modular; event-driven; cache}}
-- **Porquê:** {{liga aos riscos RKxxxx}}
-- **Status:** provisória — a provar pelo baseline executável na Elaboration.
+- **Style / direction decisions:** {{e.g.: modular monolith; event-driven; cache}}
+- **Why:** {{links to risks RKxxxx}}
+- **Status:** provisional — to be proven by the executable baseline in Elaboration.
 
 ```plantuml
 @startuml
@@ -156,45 +162,47 @@ left to right direction
 @enduml
 ```
 
-## 9. Business case (rascunho)
+## 9. Business case (draft)
 
-> _Camada 9. Justificativa econômica **em geral** (ordem de grandeza); bid detalhado → Elaboration._
+> _Layer 9. Economic justification **in general** (order of magnitude); detailed bid →
+> Elaboration._
 
-- **Justificativa:** {{problema → valor}}
-- **Custo (ordem de grandeza):** desenvolvimento · infra/operação · tooling.
-- **Retorno/valor:** {{receita/economia/estratégico}}
-- **ROI / recomendação:** {{go/no-go provisório, a confirmar na Elaboration}}
+- **Justification:** {{problem → value}}
+- **Cost (order of magnitude):** development · infra/operation · tooling.
+- **Return/value:** {{revenue/savings/strategic}}
+- **ROI / recommendation:** {{provisional go/no-go, to be confirmed in Elaboration}}
 
-## 10. Plano de fase / estimativa (leve)
+## 10. Phase plan / estimate (light)
 
-> _Camada 10. PM leve. Distribuição referencial (Construction tende a encolher no AI-assisted)._
+> _Layer 10. Light PM. Referential distribution (Construction tends to shrink in AI-assisted UP)._
 
-| Fase | Marco | Foco | Esforço (ref.) |
-|------|-------|------|----------------|
-| Inception (atual) | LCO | este brief | ~10% |
+| Phase | Milestone | Focus | Effort (ref.) |
+|-------|-----------|-------|---------------|
+| Inception (current) | LCO | this brief | ~10% |
 | Elaboration | LCA | spec.md + plan.md/C4 + ADRs + baseline + execution plan | ~30% |
-| Construction | IOC | forge + TDAD + review até beta | ~50% (tende a menor) |
-| Transition | Product Release | deploy + verificação em prd | ~10% |
+| Construction | IOC | forge + TDAD + review up to beta | ~50% (tends lower) |
+| Transition | Product Release | deploy + production verification | ~10% |
 
-Iterações previstas (estimativa): {{Elaboration N · Construction N · Transition N}}.
+Planned iterations (estimate): {{Elaboration N · Construction N · Transition N}}.
 
-## 11. Fronteira (o que NÃO está neste brief)
+## 11. Boundary (what is NOT in this brief)
 
-- **Detalhamento dos use cases** (fluxos alternativos, exceções) → `spec.md` (Elaboration).
-- **Diagramas de detalhe** (sequence de componentes, activity, **C4 N3**) → Elaboration.
-- **ADR formal** (decisão de arquitetura provada) → Elaboration.
-- **Fatiamento/execução** (tasks, ciclos, PRs) → `tasks.md` + execution plan.
+- **Use-case detailing** (alternative flows, exceptions) → `spec.md` (Elaboration).
+- **Detail diagrams** (component sequence, activity, **C4 L3**) → Elaboration.
+- **Formal ADR** (proven architecture decision) → Elaboration.
+- **Slicing/execution** (tasks, cycles, PRs) → `tasks.md` + execution plan.
 
-## 12. Prontidão para o LCO (marco de fim da Inception)
+## 12. LCO readiness (end-of-Inception milestone)
 
-> _Camada final. Checklist *marco-aware*. O gate é selado pelo **humano-validador** (sign-off)._
+> _Final layer. Milestone-aware checklist. The gate is sealed by the **user (Architect-Validator)**
+> (sign-off)._
 
-| Critério LCO | Onde | Status |
-|--------------|------|--------|
-| Escopo claro | §2, §6 | {{OK / pendente}} |
-| Atores identificados | §6 | {{...}} |
-| Arquitetura candidata à vista | §8 | {{...}} |
-| Riscos críticos identificados e mitigáveis | §5 | {{...}} |
-| Business case justifica o investimento | §9 | {{...}} |
-| Plano de fase / estimativa | §10 | {{...}} |
-| Stakeholders concordam | — | sign-off do validador |
+| LCO criterion | Where | Status |
+|---------------|-------|--------|
+| Clear scope | §2, §6 | {{OK / pending}} |
+| Actors identified | §6 | {{...}} |
+| Candidate architecture in view | §8 | {{...}} |
+| Critical risks identified and mitigable | §5 | {{...}} |
+| Business case justifies the investment | §9 | {{...}} |
+| Phase plan / estimate | §10 | {{...}} |
+| Stakeholders agree | — | user (Architect-Validator) sign-off |

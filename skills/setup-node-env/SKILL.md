@@ -1,128 +1,140 @@
 ---
 name: setup-node-env
-description: Configura ambiente Node.js do projeto — detecta versão (nvmrc/Dockerfile), executa nvm install/use, verifica NPM_TOKEN para pacotes privados e executa npm install. Use quando iniciar projeto Node, quando npm install falhar, ou quando versão do Node precisar ser ajustada.
+description: Sets up a project's Node.js environment — detects the version from .nvmrc/Dockerfile, runs nvm install/use, checks NPM_TOKEN when a private registry is used, and runs npm install. Use when the user says "set up node", "npm install is failing", "switch node version". Do NOT use for the toolchain check inside TF execution (use /scrapup:forge).
 user-invocable: true
 ---
 
 # Setup Node Environment
 
-Configure o ambiente Node.js do projeto: ajuste a versão correta via nvm, garanta o token para pacotes privados e instale as dependências.
+Set up the project's Node.js environment: pin the right version via nvm, make sure the private-registry token is available when needed, and install dependencies.
 
-## Quando Usar
+## When to Use
 
-- Quando o utilizador pedir o ajuste do ambiente Node.js. A skill /scrapup:forge **não** invoca esta skill: a seção 0 dela faz a verificação simples de toolchain inline
-- Primeiro setup de um projeto Node.js
-- Quando `npm install` falhar por conflito de versão ou dependências
-- Quando a versão do Node.js precisar ser alterada
+- The user asks to set up or adjust the Node.js environment. /scrapup:forge does **not** invoke this skill: its section 0 runs the simple toolchain check inline
+- First setup of a Node.js project
+- `npm install` fails with a version or dependency conflict
+- The Node.js version needs to change
 
-## Quando NÃO Usar
+## When NOT to Use
 
-- Ambiente já configurado e validado na sessão atual
-- Projetos sem Node.js
-- CI/CD onde o setup é gerido pelo pipeline
+- Skip when the environment was already set up and validated in the current session.
+- Skip when the project does not use Node.js.
+- Skip in CI/CD, where the pipeline owns the setup.
 
-## Regras
+## Rules
 
-- **NUNCA** usar `--legacy-peer-deps` — `npm install` deve funcionar puro
-- **NUNCA** armazenar tokens em arquivos da skill ou do projeto (usar variável de ambiente)
-- Conflitos de versão são resolvidos atualizando `.nvmrc` + Dockerfile, nunca forçando deps
+- **NEVER** use `--legacy-peer-deps` — plain `npm install` must work
+- **NEVER** store tokens in skill or project files — `NPM_TOKEN` lives only in the user's shell environment
+- **NEVER** request or accept a token value in chat
+- **NEVER** switch the Node version without explicit user approval — propose the target version with evidence from the npm output first
+- Version conflicts are resolved by updating `.nvmrc` + Dockerfile, never by forcing dependencies
 
 ## Scripts
 
-Todos os scripts estão em `~/.claude/plugins/local/scrapup/skills/setup-node-env/`. Aceitam `[project-dir]` como primeiro argumento (padrão: `.`).
+All scripts live in `${CLAUDE_PLUGIN_ROOT}/skills/setup-node-env/`. They take `[project-dir]` as the first argument (default: `.`), except `update-node-version.sh`, which takes `<version> [project-dir]`.
 
-| Script | Função | Exit codes |
-|--------|--------|------------|
-| [`detect-node-version.sh`](detect-node-version.sh) | Detecta versão do `.nvmrc` ou Dockerfile | 0=encontrada, 1=sem arquivos, 2=Dockerfile sem versão |
-| [`nvm-install-use.sh`](nvm-install-use.sh) | Carrega nvm + install + use | 0=ok, 1=nvm ausente, 2=sem .nvmrc, 3=install falhou |
-| [`check-npm-token.sh`](check-npm-token.sh) | Verifica se `NPM_TOKEN` está no ambiente | 0=disponível, 1=ausente |
-| [`npm-install.sh`](npm-install.sh) | Executa `npm install` e classifica falha | 0=ok, 1=conflito versão/deps, 2=outra falha |
-| [`update-node-version.sh`](update-node-version.sh) `<v>` | Atualiza `.nvmrc` + Dockerfile + nvm | 0=ok, 1=versão não informada |
-| [`docker-build.sh`](docker-build.sh) | Build do Dockerfile com `NPM_TOKEN` | 0=ok, 1=sem Dockerfile, 2=sem token, 3=build falhou |
+| Script | Purpose | Exit codes |
+|--------|---------|------------|
+| [`detect-node-version.sh`](detect-node-version.sh) | Detects the version from `.nvmrc` or the Dockerfile | 0=found, 1=no files, 2=Dockerfile without a version |
+| [`nvm-install-use.sh`](nvm-install-use.sh) | Loads nvm, then install + use | 0=ok, 1=nvm missing, 2=no .nvmrc, 3=install failed, 4=use failed |
+| [`check-npm-token.sh`](check-npm-token.sh) | Checks whether `NPM_TOKEN` is in the environment | 0=available, 1=missing |
+| [`npm-install.sh`](npm-install.sh) | Runs `npm install` and classifies the failure | 0=ok, 1=version/deps conflict, 2=other failure |
+| [`update-node-version.sh`](update-node-version.sh) `<v>` | Updates `.nvmrc` + Dockerfile, then nvm install/use | 0=ok, 1=version missing/invalid, 2=nothing updated, 3=nvm missing, 4=nvm install/use failed |
+| [`docker-build.sh`](docker-build.sh) | BuildKit build of the Dockerfile, `NPM_TOKEN` as a secret | 0=ok, 1=no Dockerfile, 2=secret required but no token, 3=build failed |
 
-## Fluxo do Agente
+## Agent Flow
 
-O diagrama completo está em [`setup-node-env-flow.puml`](setup-node-env-flow.puml) neste diretório.
-
-### 1. Detectar versão
+### 1. Detect the version
 
 ```bash
-~/.claude/plugins/local/scrapup/skills/setup-node-env/detect-node-version.sh <project-dir>
+${CLAUDE_PLUGIN_ROOT}/skills/setup-node-env/detect-node-version.sh <project-dir>
 ```
 
-A decisão é ancorada **no exit code** do script. `NODE_VERSION` no stdout só está presente em **exit 0** — nunca em exit 1 ou 2.
+Decide on the **exit code**. `NODE_VERSION` is printed only on **exit 0**. `DOCKERFILE=<path>` is printed whenever a Dockerfile was found (exit 0 via Dockerfile, or exit 2).
 
-| Exit | Stdout | Ação do agente |
-|------|--------|----------------|
-| 0 | `NODE_VERSION=<v>` + `SOURCE=nvmrc` | `.nvmrc` existe — prosseguir para o passo 2 (nvm) |
-| 0 | `NODE_VERSION=<v>` + `SOURCE=dockerfile` | Ler `NODE_VERSION` do stdout e criar `.nvmrc` com essa versão; prosseguir para o passo 2 |
-| 1 | `SOURCE=none` | Nenhum `.nvmrc` nem Dockerfile — informar utilizador e solicitar a versão |
-| 2 | `SOURCE=dockerfile` (sem `NODE_VERSION`) | Dockerfile existe mas versão não é extraível — informar utilizador e solicitar a versão. **Nunca** criar `.nvmrc` (não há versão a gravar) |
+| Exit | Stdout | Agent action |
+|------|--------|--------------|
+| 0 | `NODE_VERSION=<v>` + `SOURCE=nvmrc` | `.nvmrc` exists — go to step 2 |
+| 0 | `DOCKERFILE=<path>` + `NODE_VERSION=<v>` + `SOURCE=dockerfile` | Create `.nvmrc` with `NODE_VERSION` from stdout; go to step 2 |
+| 1 | `SOURCE=none` | No `.nvmrc` and no Dockerfile — tell the user and ask for the version |
+| 2 | `DOCKERFILE=<path>` + `SOURCE=dockerfile` (no `NODE_VERSION`) | The Dockerfile's Node version cannot be extracted — tell the user and ask for the version. **Never** create `.nvmrc` (there is no version to write) |
 
-### 2. NVM install + use
+### 2. nvm install + use
 
 ```bash
-~/.claude/plugins/local/scrapup/skills/setup-node-env/nvm-install-use.sh <project-dir>
+${CLAUDE_PLUGIN_ROOT}/skills/setup-node-env/nvm-install-use.sh <project-dir>
 ```
 
-Se exit 0: prosseguir. Caso contrário: informar utilizador e aguardar orientação.
+Exit 0: continue. Any other exit (1 nvm missing, 2 no `.nvmrc`, 3 install failed, 4 use failed): tell the user, include the output, and wait for direction.
 
-### 3. Verificar NPM_TOKEN
+### 3. Check NPM_TOKEN (only if the project uses a private registry)
+
+Skip this step when the project installs only public packages (no private registry in `.npmrc` or `package.json` scopes).
 
 ```bash
-~/.claude/plugins/local/scrapup/skills/setup-node-env/check-npm-token.sh
+${CLAUDE_PLUGIN_ROOT}/skills/setup-node-env/check-npm-token.sh
 ```
 
-| Exit | Ação do agente |
-|------|----------------|
-| 0 | `NPM_TOKEN` disponível — prosseguir para o passo 4 |
-| 1 | Token ausente — solicitar ao utilizador e exportar `NPM_TOKEN` no ambiente antes de prosseguir |
+| Exit | Agent action |
+|------|--------------|
+| 0 | `NPM_TOKEN` available — go to step 4 |
+| 1 | Token missing — ask the user to export `NPM_TOKEN` in their shell; never request or accept the token value in chat |
 
-Fallback se o utilizador não fornecer o token (exit 1): prosseguir para o passo 4 ciente de que pacotes privados falharão na instalação, **ou** abortar com mensagem explícita. Decisão do utilizador — não inventar nem inferir token.
+If the user does not export the token (exit 1): either continue to step 4 knowing private packages will fail, **or** abort with an explicit message. The user decides — never invent or infer a token.
 
 ### 4. npm install
 
 ```bash
-~/.claude/plugins/local/scrapup/skills/setup-node-env/npm-install.sh <project-dir>
+${CLAUDE_PLUGIN_ROOT}/skills/setup-node-env/npm-install.sh <project-dir>
 ```
 
-| Exit | Ação do agente |
-|------|----------------|
-| 0 | Sucesso — Node.js configurado |
-| 1 | Conflito de versão — analisar output, identificar versão necessária, executar [`update-node-version.sh`](update-node-version.sh) + [`docker-build.sh`](docker-build.sh) + [`npm-install.sh`](npm-install.sh) novamente |
-| 2 | Outra falha — informar utilizador (rede, registry, permissões), aguardar orientação |
+Conflict criterion: exit 1 only when the npm error code is `ERESOLVE`, or the install failed with an engine mismatch **error** (`code EBADENGINE`, e.g. with `engine-strict`). `npm WARN EBADENGINE` warnings never count as a conflict.
 
-### 5. Resolver conflito de versão (se exit 1 no passo 4)
+| Exit | Agent action |
+|------|--------------|
+| 0 | Success — Node.js is set up |
+| 1 | Version conflict — go to step 5 |
+| 2 | Other failure (network, registry, auth, permissions) — tell the user, include the output, wait for direction |
 
-Resolver conflito **nunca** com `--legacy-peer-deps` — atualizar a versão e rebuildar. Executar na ordem, mapeando cada exit antes de avançar:
+### 5. Resolve a version conflict (exit 1 in step 4)
+
+Never resolve a conflict with `--legacy-peer-deps` — update the version and rebuild.
+
+1. **Propose, do not switch.** Propose the target version with evidence from the npm output (the `ERESOLVE`/`EBADENGINE` lines that require it); run `update-node-version.sh` only after explicit user approval. If the user declines, stop and report.
+2. After approval, run in order, mapping each exit before moving on:
 
 ```bash
-~/.claude/plugins/local/scrapup/skills/setup-node-env/update-node-version.sh <nova-versão> <project-dir>
-~/.claude/plugins/local/scrapup/skills/setup-node-env/docker-build.sh <project-dir>
-~/.claude/plugins/local/scrapup/skills/setup-node-env/npm-install.sh <project-dir>
+${CLAUDE_PLUGIN_ROOT}/skills/setup-node-env/update-node-version.sh <approved-version> <project-dir>
+${CLAUDE_PLUGIN_ROOT}/skills/setup-node-env/docker-build.sh <project-dir>
+${CLAUDE_PLUGIN_ROOT}/skills/setup-node-env/npm-install.sh <project-dir>
 ```
 
 `update-node-version.sh`:
 
-| Exit | Ação do agente |
-|------|----------------|
-| 0 | Arquivos atualizados e nvm na nova versão — prosseguir para `docker-build.sh` |
-| 1 | Versão não informada (erro de invocação) — corrigir o argumento e reexecutar |
+| Exit | Agent action |
+|------|--------------|
+| 0 | Files updated and nvm on the new version — go to `docker-build.sh` |
+| 1 | Version missing or invalid (invocation error) — fix the argument and rerun |
+| 2 | Nothing updated (no `.nvmrc`, no Dockerfile with `FROM node:<version>`) — tell the user and wait for direction |
+| 3 | Files updated but nvm not found — tell the user; do not continue |
+| 4 | Files updated but nvm install/use failed — tell the user, include the output |
 
-`docker-build.sh`:
+`docker-build.sh` (requires Docker — check it first with /scrapup:enable-docker-server):
 
-| Exit | Ação do agente |
-|------|----------------|
-| 0 | Build OK — prosseguir para `npm-install.sh` |
-| 1 | Dockerfile não encontrado — pular o build (não bloqueia) e prosseguir para `npm-install.sh` |
-| 2 | `NPM_TOKEN` não definido — voltar ao passo 3 (solicitar/exportar token) e reexecutar |
-| 3 | Build falhou — informar utilizador, anexar output, aguardar orientação |
+The build uses BuildKit and passes `NPM_TOKEN` as a secret (`--secret id=npm_token,env=NPM_TOKEN`), never as a build-arg, so the token never lands in the image history. A Dockerfile that needs the token must consume it via `RUN --mount=type=secret,id=npm_token ...` (the value is read from `/run/secrets/npm_token`).
 
-`npm-install.sh` (segunda passagem): mesmo mapeamento do passo 4. Se voltar a sair **1** (conflito persistente): escalar ao utilizador com o output, não repetir o ciclo automaticamente; saída **2** (outra falha): informar e aguardar orientação.
+| Exit | Agent action |
+|------|--------------|
+| 0 | Build OK — go to `npm-install.sh` |
+| 1 | No Dockerfile — skip the build (non-blocking) and go to `npm-install.sh` |
+| 2 | The Dockerfile mounts the `npm_token` secret but `NPM_TOKEN` is not set — back to step 3, then rerun |
+| 3 | Build failed — tell the user, include the output, wait for direction |
 
-## Integração com Outras Skills
+`npm-install.sh` (second pass): same mapping as step 4. If it exits **1** again (persistent conflict): escalate to the user with the output; do not repeat the cycle automatically. Exit **2**: tell the user and wait for direction.
 
-| Skill | Como integra |
+## Integration with Other Skills
+
+| Skill | Integration |
 |-------|-------------|
-| /scrapup:forge | **Não invoca.** A seção 0 da forge verifica versão de Node e instala dependências inline; esta skill fica para ajustes de ambiente sob demanda |
-| /scrapup:enable-docker-server | Garantir Docker disponível antes de [`docker-build.sh`](docker-build.sh) |
+| /scrapup:forge | **Does not invoke.** Forge's section 0 checks the Node version and installs dependencies inline; this skill handles on-demand environment adjustments |
+| /scrapup:enable-docker-server | Make sure Docker is available before [`docker-build.sh`](docker-build.sh) |

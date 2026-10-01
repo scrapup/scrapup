@@ -12,14 +12,23 @@ start
 
 partition "0. Entry Point" #ECEFF1 {
   :new demand received;
+}
 
-  if (SDD artifacts\nexist in the workspace?\n(tasks.md, single-tasks.md,\nspec.md, plan.md)) then (yes)
-    :use existing artifacts;
-    #C8E6C9:skip to **Triage**;
+if (SDD artifacts\nexist in the workspace?\n(tasks.md, single-tasks.md,\nspec.md, plan.md)) then (yes)
+
+partition "0r. Review Mode (existing SDD artifacts)" #FFF8E1 {
+  :run **document-analysis.md**\nin review mode;
+  :preserve every existing ID\n(BR-XX, US-XX, TF-XX-YY);
+  :present the analysis report\n(section 4); <<#FFF9C4>>
+  if (user requests changes\nor a new demand?) then (yes)
+    :continue to **Triage**\n(update artifacts in place);
   else (no)
-    #F3E5F5:no SDD artifacts —\nstart **Artifact Production**;
+    :review delivered; <<#C8E6C9>>
+    stop
   endif
 }
+
+else (no)
 
 partition "1. Artifact Production (no prior SDD)" #F3E5F5 {
   :explore intent and scope\nwith the user\n(skill **brainstorming**);
@@ -31,24 +40,26 @@ partition "1. Artifact Production (no prior SDD)" #F3E5F5 {
   repeat
     if (enough\ninformation?) then (yes)
     else (no)
-      :list 3–5 objective\nquestions to the user; <<#FFF9C4>>
+      :ask up to 5 blocking\nquestions to the user\n(Blocking Information Rule); <<#FFF9C4>>
       :wait for the answer;
     endif
     :refinement_cycle++;
-  repeat while (insufficient information\nAND cycle <= 20?) is (continue) not (stop)
+  repeat while (blocking gaps open\nAND stop condition\nnot reached?) is (continue) not (stop)
 
-  if (cycle > 20\nAND information still\ninsufficient?) then (yes)
-    #FFCDD2:tell the user:\ninsufficient information\nto generate artifacts;
+  if (stop condition reached\nAND blocking gaps\nstill open?) then (yes)
+    :tell the user:\ninsufficient information\nto generate artifacts; <<#FFCDD2>>
     stop
   else (no)
   endif
 }
 
+endif
+
 partition "2. Impact Triage" #E3F2FD {
   if (low impact,\nfew files,\n<= 5 Tasks?) then (yes)
-    #C8E6C9:**incremental** flow\n(single-tasks.md);
+    :**incremental** flow\n(single-tasks.md); <<#C8E6C9>>
   else (no\nor > 5 TF)
-    #E8EAF6:**full** flow\n(spec → plan → tasks.md);
+    :**full** flow\n(spec → plan → tasks.md); <<#E8EAF6>>
   endif
 }
 
@@ -65,14 +76,14 @@ partition "3i. Incremental Flow — single-tasks.md" #E8F5E9 {
     :create single-tasks.md\n(US + TF templates;\nspecification in the TFs;\nno spec.md / plan.md);
   endif
 
-  :new US? ask the user\nfor the first User Story ID; <<#FFF9C4>>
+  :new US? ask the user\nfor the first User Story ID\nand the Epic reference; <<#FFF9C4>>
 
   :write each TF **self-contained**:\ntouched files, criteria,\nDoD, Execution Guidance;
 
   :PlantUML diagrams\nonly if needed\n(reduce ambiguity);
 
   if (count of\nTF- blocks > 5?) then (yes)
-    #FFCDD2:incremental limit exceeded!\nRequire the **full flow**\n(spec + plan + tasks.md);
+    :incremental limit exceeded!\nRequire the **full flow**\n(spec + plan + tasks.md); <<#FFCDD2>>
     stop
   else (no)
   endif
@@ -86,7 +97,7 @@ partition "3i. Incremental Flow — single-tasks.md" #E8F5E9 {
     endif
   repeat while (not approved?) is (yes) not (approved)
 
-  #C8E6C9:single-tasks.md approved;
+  :single-tasks.md approved; <<#C8E6C9>>
 }
 
 else (full)
@@ -101,7 +112,7 @@ partition "3c-1. Phase 1 — spec.md (What and Why)" #E8EAF6 {
 
   if (enough information\nfor every section?) then (yes)
   else (no)
-    :ask 3–5 objective\nquestions to the user\n(edge cases, business\nrules, SLAs, volume); <<#FFF9C4>>
+    :ask up to 5 blocking\nquestions to the user\n(edge cases, business\nrules, SLAs, volume); <<#FFF9C4>>
     :wait for the answer;
   endif
 
@@ -116,7 +127,7 @@ partition "3c-1. Phase 1 — spec.md (What and Why)" #E8EAF6 {
     endif
   repeat while (spec.md\nnot approved?) is (yes) not (approved)
 
-  #C8E6C9:spec.md approved;
+  :spec.md approved; <<#C8E6C9>>
 }
 
 partition "3c-2. Phase 2 — plan.md (How)" #FFF3E0 {
@@ -129,11 +140,11 @@ partition "3c-2. Phase 2 — plan.md (How)" #FFF3E0 {
 
   if (enough information\nfor the architecture?) then (yes)
   else (no)
-    :ask 3–5 questions\nabout bottlenecks, integrations,\nnon-functional requirements; <<#FFF9C4>>
+    :ask up to 5 blocking\nquestions about bottlenecks,\nintegrations, non-functional\nrequirements; <<#FFF9C4>>
     :wait for the answer;
   endif
 
-  :generate PlantUML diagrams\n(skill **expert-plantuml**):\n— C4 L2 (Containers)\n— C4 L3 (Components)\n— Sequence (success + failure)\n— Envelope/Traceability\n   (if there is a queue);
+  :generate PlantUML diagrams\n(skill **expert-plantuml**):\n— C4 L2 (Containers)\n— C4 L3 (Components)\n— Sequence (success + failure)\n— Envelope/Traceability\n   (if there is messaging);
 
   :fill the plan.md template:\n— architecture overview\n— solution diagrams\n— data modeling and schemas\n— IDL contracts (OpenAPI/AsyncAPI)\n— resilience and errors\n— metrics, logs and traces\n— rationale and trade-offs;
 
@@ -146,7 +157,7 @@ partition "3c-2. Phase 2 — plan.md (How)" #FFF3E0 {
     endif
   repeat while (plan.md\nnot approved?) is (yes) not (approved)
 
-  #C8E6C9:plan.md approved;
+  :plan.md approved; <<#C8E6C9>>
 }
 
 partition "3c-3. Phase 3 — tasks.md (Atomic Execution)" #FCE4EC {
@@ -154,7 +165,7 @@ partition "3c-3. Phase 3 — tasks.md (Atomic Execution)" #FCE4EC {
 
   :define User Stories\n(value deliverables);
 
-  :ask the user for the\nfirst User Story ID; <<#FFF9C4>>
+  :ask the user for the\nfirst User Story ID\nand the Epic reference; <<#FFF9C4>>
 
   :include per-US diagrams proportional to scope:\nC4 L2 + Sequence when multi-container,\nnon-trivial failure or messaging;\nsingle-flow US: Sequence only\n(reuse/adapt from plan.md,\nskill **expert-plantuml**);
 
@@ -171,7 +182,7 @@ partition "3c-3. Phase 3 — tasks.md (Atomic Execution)" #FCE4EC {
     endif
   repeat while (tasks.md\nnot approved?) is (yes) not (approved)
 
-  #C8E6C9:tasks.md approved;
+  :tasks.md approved; <<#C8E6C9>>
 }
 
 endif
@@ -187,6 +198,7 @@ stop
 legend right
   |= Color |= Step |
   | <#ECEFF1> | 0. Entry Point |
+  | <#FFF8E1> | 0r. Review Mode |
   | <#F3E5F5> | 1. Artifact Production |
   | <#E3F2FD> | 2. Impact Triage |
   | <#E8F5E9> | 3i. Incremental (single-tasks.md) |

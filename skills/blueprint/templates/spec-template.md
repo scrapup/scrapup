@@ -24,7 +24,7 @@ Before filling the template, check that you have answers to:
 4. What happens when input data is invalid or systems fail?
 5. Are there performance SLAs or expected volume?
 
-If answers are missing, list 3-5 direct questions to the user before generating the artifact.
+If answers are missing, ask the user per the **Blocking Information Rule** (see **Discovery Mode** in `SKILL.md`) before generating the artifact.
 
 ---
 
@@ -83,7 +83,7 @@ How do we validate that the delivery is complete and performant?
 - [ ] [e.g., Business rules BR-01 to BR-03 validated]
 
 **Performance SLAs:**
-- Latency: [e.g., < 400ms at P95]
+- Latency: [e.g., < [X]ms at P95]
 - Throughput: [e.g., Sustain 50 req/s at peak]
 - Availability: [e.g., 99.9% uptime]
 
@@ -105,20 +105,20 @@ Define domain terms that may be interpreted ambiguously across stakeholders.
 
 ## Usage Example
 
-**Scenario:** SME health plan quoting system.
+**Scenario:** library book reservation system.
 
 ```markdown
-# Functional Specification: SME Quoting Engine
+# Functional Specification: Book Reservation
 
 ## 1. Overview and Goal
-- **The Problem:** SME quotes are calculated manually, causing errors and delays of up to 48h.
-- **The Solution:** An automated system that calculates the net price considering age band, product and active campaigns.
-- **The Value:** Quote time reduced from 48h to under 1 second, eliminating manual errors.
+- **The Problem:** Reservations are recorded manually at the front desk, causing double bookings and waits of up to 2 days.
+- **The Solution:** A self-service reservation flow that checks availability, member status and active holds.
+- **The Value:** Reservation confirmed in the same session, eliminating double bookings.
 
 ## 4. Edge Cases (Zero Trust)
 | Scenario | Expected Behavior | Severity |
 |---|---|---|
-| Invalid tax ID | Reject with a validation error | Critical |
-| No active campaign | Return a null discount without failing the quote | Medium |
-| Price table unavailable | Return 503 with a retry-after header | High |
+| Invalid member ID | Reject with a validation error | Critical |
+| No copy available | Offer a waitlist position without failing the request | Medium |
+| Catalog unavailable | Tell the member the reservation cannot be confirmed now and to try again later | High |
 ```

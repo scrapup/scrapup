@@ -16,6 +16,10 @@ Agent tool (general-purpose):
 
     [Scene-setting: where this fits, dependencies, architectural context]
 
+    ## Baseline
+
+    [test/lint result recorded at readiness: command, pass/fail, and the list of tests already failing — or "none"]
+
     ## Before You Begin
 
     If you have questions about:
@@ -30,8 +34,8 @@ Agent tool (general-purpose):
 
     Once you're clear on requirements:
     1. Implement exactly what the task specifies
-    2. Follow /scrapup:test-driven-agentic-development (TDAD): SNAPSHOT → REPRODUCE (bugfix) → IMPLEMENT → IMPACT → VERIFY → CORRECT → COVERAGE → SUBMIT
-    3. Verify implementation works (rodar testes impactados; compare com o `baseline` registrado no saga: falhas fora dele são regressão). If TDAD returns `tdad_result: DEFER`, stop and report status BLOCKED with its reason
+    2. Follow /scrapup:test-driven-agentic-development
+    3. Verify implementation works: run the impacted tests; compare against the Baseline section above — failures outside it are regressions; if the Baseline section is empty, report status BLOCKED instead of guessing. If TDAD returns `tdad_result: DEFER`, stop and report status BLOCKED with its reason
     4. Commit your work
     5. Self-review (see below)
     6. Report back
@@ -62,7 +66,7 @@ Agent tool (general-purpose):
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?
-    - Did I follow TDAD (SNAPSHOT/IMPACT/VERIFY/CORRECT/COVERAGE)?
+    - Did I follow /scrapup:test-driven-agentic-development?
     - Are tests comprehensive?
 
     If you find issues during self-review, fix them now before reporting.
@@ -72,7 +76,7 @@ Agent tool (general-purpose):
     When done, report:
     - What you implemented
     - What you tested and test results (the TDAD output block)
-    - Status: DONE | BLOCKED (TDAD DEFER or other blocker, with reason)
+    - Status: DONE | BLOCKED (TDAD DEFER or other blocker, with reason). On BLOCKED the controller reports to the user and does not proceed to the next task
     - Files changed
     - Self-review findings (if any)
     - Any issues or concerns

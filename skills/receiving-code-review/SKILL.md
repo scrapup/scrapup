@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+description: Evaluates code review feedback with technical rigor before implementing — verify, push back, or clarify; no performative agreement. Use when the user says "address the review", "respond to PR comments", "fix the reviewer's items". Do NOT use for requesting a review of your own work (use /scrapup:requesting-code-review).
 ---
 
 # Code Review Reception
@@ -27,7 +27,7 @@ WHEN receiving code review feedback:
 ## Forbidden Responses
 
 **NEVER:**
-- "You're absolutely right!" (explicit CLAUDE.md violation)
+- "You're absolutely right!" (performative; violates the /scrapup:communication no-flattery rule)
 - "Great point!" / "Excellent feedback!" (performative)
 - "Let me implement that now" (before verification)
 
@@ -49,16 +49,16 @@ WHY: Items may be related. Partial understanding = wrong implementation.
 
 **Example:**
 ```
-your human partner: "Fix 1-6"
+The user (Architect-Validator): "Fix 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
 
-❌ WRONG: Implement 1,2,3,6 now, ask about 4,5 later
-✅ RIGHT: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
+BAD: Implement 1,2,3,6 now, ask about 4,5 later
+GOOD: "I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding."
 ```
 
 ## Source-Specific Handling
 
-### From your human partner
+### From the user (Architect-Validator)
 - **Trusted** - implement after understanding
 - **Still ask** if scope unclear
 - **No performative agreement**
@@ -79,11 +79,11 @@ IF suggestion seems wrong:
 IF can't easily verify:
   Say so: "I can't verify this without [X]. Should I [investigate/ask/proceed]?"
 
-IF conflicts with your human partner's prior decisions:
-  Stop and discuss with your human partner first
+IF conflicts with prior decisions of the user (Architect-Validator):
+  Stop and discuss with the user (Architect-Validator) first
 ```
 
-**your human partner's rule:** "External feedback - be skeptical, but check carefully"
+**Directive:** Treat external feedback skeptically and verify it carefully before acting.
 
 ## YAGNI Check for "Professional" Features
 
@@ -95,7 +95,7 @@ IF reviewer suggests "implementing properly":
   IF used: Then implement properly
 ```
 
-**your human partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
+**Directive:** The agent and the reviewer both report to the user (Architect-Validator). Do not add a feature the codebase does not need.
 
 ## Implementation Order
 
@@ -110,6 +110,22 @@ FOR multi-item feedback:
   4. Verify no regressions
 ```
 
+## Per-Item Response Template
+
+Report every review item in this form, one line per item:
+
+```
+<item> → <status: fixed | pushback | needs-clarification> → <evidence: file:line or command output>
+```
+
+Example:
+
+```
+#3 null check in parseOrder → fixed → src/orders/parse.ts:42; `npm test -- parse` 18/18 passing
+#4 switch to Redis cache → pushback → no read hot path; grep shows 1 caller (src/report.ts:10)
+#5 "handle the edge case" → needs-clarification → which input: empty list or missing id?
+```
+
 ## When To Push Back
 
 Push back when:
@@ -118,29 +134,29 @@ Push back when:
 - Violates YAGNI (unused feature)
 - Technically incorrect for this stack
 - Legacy/compatibility reasons exist
-- Conflicts with your human partner's architectural decisions
+- Conflicts with architectural decisions of the user (Architect-Validator)
 
 **How to push back:**
 - Use technical reasoning, not defensiveness
 - Ask specific questions
 - Reference working tests/code
-- Involve your human partner if architectural
+- Involve the user (Architect-Validator) if architectural
 
-**Signal if uncomfortable pushing back out loud:** "Strange things are afoot at the Circle K"
+**When unsure whether to push back:** State the disagreement and evidence to the user (Architect-Validator).
 
 ## Acknowledging Correct Feedback
 
 When feedback IS correct:
 ```
-✅ "Fixed. [Brief description of what changed]"
-✅ "Good catch - [specific issue]. Fixed in [location]."
-✅ [Just fix it and show in the code]
+GOOD: "Fixed. [Brief description of what changed]"
+GOOD: "Confirmed — [issue]. Fixed in [location]."
+GOOD: [Just fix it and show in the code]
 
-❌ "You're absolutely right!"
-❌ "Great point!"
-❌ "Thanks for catching that!"
-❌ "Thanks for [anything]"
-❌ ANY gratitude expression
+BAD: "You're absolutely right!"
+BAD: "Great point!"
+BAD: "Thanks for catching that!"
+BAD: "Thanks for [anything]"
+BAD: ANY gratitude expression
 ```
 
 **Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
@@ -151,12 +167,12 @@ When feedback IS correct:
 
 If you pushed back and were wrong:
 ```
-✅ "You were right - I checked [X] and it does [Y]. Implementing now."
-✅ "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
+GOOD: "You were right - I checked [X] and it does [Y]. Implementing now."
+GOOD: "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
 
-❌ Long apology
-❌ Defending why you pushed back
-❌ Over-explaining
+BAD: Long apology
+BAD: Defending why you pushed back
+BAD: Over-explaining
 ```
 
 State the correction factually and move on.
@@ -178,31 +194,31 @@ State the correction factually and move on.
 **Performative Agreement (Bad):**
 ```
 Reviewer: "Remove legacy code"
-❌ "You're absolutely right! Let me remove that..."
+BAD: "You're absolutely right! Let me remove that..."
 ```
 
 **Technical Verification (Good):**
 ```
 Reviewer: "Remove legacy code"
-✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
+GOOD: "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
 ```
 
 **YAGNI (Good):**
 ```
 Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
-✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
+GOOD: "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
 ```
 
 **Unclear Item (Good):**
 ```
-your human partner: "Fix items 1-6"
+The user (Architect-Validator): "Fix items 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
-✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
+GOOD: "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
 ```
 
 ## GitHub Thread Replies
 
-When replying to inline review comments on GitHub, reply in the comment thread (via o command `/scrapup:github`, no MCP — nunca via CLI `gh`), not as a top-level PR comment.
+When replying to inline review comments on GitHub, reply in the comment thread, not as a top-level PR comment. Use the GitHub MCP if available; otherwise `gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`.
 
 ## The Bottom Line
 
@@ -211,3 +227,9 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## Related Skills
+
+- `/scrapup:requesting-code-review` — request a review of your own work.
+- `/scrapup:communication` — register and tone for replies to reviewers.
+- `/scrapup:verification-before-completion` — evidence before claiming an item is fixed.

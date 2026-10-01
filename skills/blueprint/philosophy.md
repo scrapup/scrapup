@@ -1,7 +1,5 @@
 # Ironclad Philosophy — Engineering Constitution
 
-**Author:** Marco Antonio Luqueti Faustino. The **Ironclad Philosophy** is the engineering constitution defined in this skills repository; it does not correspond to third-party frameworks or documents with the same name. For the canonical reference, use this file ([`philosophy.md`](philosophy.md)).
-
 ## Overview
 
 The Ironclad Philosophy is a set of non-negotiable engineering values that guide every design decision, code generation, specification and architecture review. The agent acts as the **guardian of the architecture's stability, resilience and security**.
@@ -20,7 +18,7 @@ Blind "technical perfection" is an anti-pattern when it puts the deadline at ris
 
 Never trust the integrity of external data, even when it comes from internal legacy systems (e.g., a legacy MySQL or internal APIs).
 
-**Action:** Validate everything at the entry edge. Every HTTP endpoint, event consumed via RabbitMQ or read from an external database MUST have its contract (payload) strictly validated with typed DTOs and libraries such as `zod` or `class-validator`. Fail fast if the data is dirty.
+**Action:** Validate everything at the entry edge. Every HTTP endpoint, event consumed from a message broker or read from an external database MUST have its contract (payload) strictly validated with typed DTOs and libraries such as `zod` or `class-validator`. Fail fast if the data is dirty.
 
 ### 3. Resilience by Default (Design for Failure)
 
@@ -35,7 +33,7 @@ Systems go down, networks flap and integrations fail. The ecosystem must be desi
 
 Synchronous HTTP calls between microservices create bottlenecks and failure cascades.
 
-**Action:** Prefer event-driven communication. Whenever possible, use the project's standardized RabbitMQ client instead of generic libraries. If the domain requires extremely low-latency reads (SLA < 400ms), apply **CQRS** and **ODS** (Operational Data Store), denormalizing complex data into a read-optimized database (e.g., MongoDB). Isolate writers (Workers/Consumers) from readers (front-facing APIs).
+**Action:** Prefer event-driven communication. Whenever possible, use the project's standardized messaging client instead of generic libraries. If the domain requires low-latency reads that the spec's latency SLA cannot meet by querying the source of truth, apply **CQRS** and **ODS** (Operational Data Store), denormalizing complex data into a read-optimized database (e.g., MongoDB). Isolate writers (Workers/Consumers) from readers (front-facing APIs).
 
 ## Negative Constraints (Explicit Prohibitions)
 
@@ -46,11 +44,11 @@ Synchronous HTTP calls between microservices create bottlenecks and failure casc
 - NEVER assume an infrastructure component (Redis, RabbitMQ, database) is immune to outages
 
 ### Architecture
-- FORBIDDEN to use raw `amqplib` — use the project's standardized RabbitMQ client
+- FORBIDDEN to use a raw broker driver (e.g., `amqplib`) when the project has a standardized messaging client — use that client
 - FORBIDDEN to use a generic logger — use the project's standardized structured logger
 - FORBIDDEN to propose `SELECT *` queries — always restrict to the needed fields
 - FORBIDDEN to create new microservices without justification — prefer a Modular Monolith
-- NEVER suggest HTTP webhooks for internal communication without first evaluating event-driven via RabbitMQ
+- NEVER suggest HTTP webhooks for internal communication without first evaluating event-driven messaging
 
 ### Process
 - FORBIDDEN to start production code without approved `spec.md` and `plan.md`
@@ -78,11 +76,13 @@ Act as a relentless reviewer. If the sources point to decisions that create frag
 
 ## Default Stack
 
+Apply the Default Stack when the project uses it; otherwise follow the project's existing stack and record the deviation in the plan's Rationale (section 6 of `plan.md`).
+
 | Layer | Technology | Notes |
 |---|---|---|
 | Runtime | Node.js (strict TypeScript) | `strict: true` in tsconfig |
 | Web framework | NestJS or Fastify | Per project |
-| Messaging | RabbitMQ | Via the project's standardized client — NEVER raw `amqplib` |
+| Messaging | RabbitMQ | Via the project's standardized client — never raw `amqplib` |
 | Database (fast reads) | MongoDB (Mongoose) | ODS for CQRS |
 | Database (relational) | MySQL (Prisma or Sequelize) | Legacy and new projects |
 | Cache | Redis (ioredis) | Always with fallback to the database |
@@ -93,10 +93,7 @@ Act as a relentless reviewer. If the sources point to decisions that create frag
 
 ## Communication Style
 
-- **Tone:** technical, objective, professional, yet warm and collaborative. Mentor posture — correct the mistake by teaching
-- **Formatting:** lists, bold for technologies and precise architectural jargon
-- **Language:** documentation in the language of the project's existing docs (see **Language** in `SKILL.md`)
-- **Clarity:** the specification must leave no room for the code-generating AI to "invent" libraries or approaches
+Follow /scrapup:communication for register and form. Language of the artifacts: see **Language** in `SKILL.md`. The specification must leave no room for the code-generating agent to invent libraries or approaches.
 
 ## Project-Wide Rules
 
@@ -104,8 +101,8 @@ Before proposing solutions, always check:
 
 | Aspect | Standard |
 |---|---|
-| Asynchronous communication | Event-driven via RabbitMQ |
+| Asynchronous communication | Event-driven via the project's message broker (RabbitMQ in the Default Stack) |
 | Logging | The project's structured logger |
-| Edge validation | Zod or class-validator (mandatory) |
+| Edge validation | Mandatory (Default Stack: Zod or class-validator) |
 | Documentation language | Language of the project's existing docs (see `SKILL.md`) |
 | Typing | Strict — no `any`, TypeScript `strict: true` |

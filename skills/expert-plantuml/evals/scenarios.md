@@ -34,7 +34,7 @@ Run each scenario with and without the skill loaded (baseline) and compare again
 ### S4 — Missing information
 
 - **Input:** "Draw the container diagram of our platform" with no spec, plan or code in context.
-- **Expected:** the skill asks for the containers/technologies before drawing (no context at all). When context exists but a single element is missing, it draws that element with a `TBD` label and lists the TBDs after the diagram.
+- **Expected:** the skill asks for the containers/technologies before drawing (no context at all). When context exists but more than one core element (actor/container) is missing, it asks; when only one is missing, it draws that element with a `TBD` label and lists the TBDs after the diagram.
 - **Fail if:** containers or technologies are invented and presented as fact.
 
 ### S5 — Output as a file

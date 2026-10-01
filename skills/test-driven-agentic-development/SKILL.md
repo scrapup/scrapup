@@ -1,6 +1,6 @@
 ---
 name: test-driven-agentic-development
-description: Implements a feature, bugfix or refactor with regression verification via test impact analysis (which existing tests to run), bug reproduction, and tests for new or changed code with diff coverage. Use when the user says "implement this fix", "refactor X safely", "which tests does this change affect", "add tests for my change", "implementar com TDAD". Do NOT use for executing TF/US tasks end to end (use forge, which calls this skill) or for root-causing an unexplained failure (use systematic-debugging).
+description: Implements a feature, bugfix or refactor with regression verification via test impact analysis (which existing tests to run), bug reproduction, and tests for new or changed code with diff coverage. Use when the user says "implement this fix", "refactor X safely", "which tests does this change affect", "add tests for my change". Do NOT use for executing TF/US tasks end to end (use /scrapup:forge, which calls this skill) or for root-causing an unexplained failure (use /scrapup:systematic-debugging).
 user-invocable: true
 ---
 
@@ -8,7 +8,7 @@ user-invocable: true
 
 Find which tests a change affects, run them, fix regressions, and cover what is new — before any commit.
 
-**Core principle:** agents do not need to be told *how* to do TDD; they need to know *which tests to verify*. Procedural TDD prompts ("write the test first, red, green, refactor") increased regressions in the TDAD study, while targeted impact context reduced them:
+**Core principle:** agents do not need to be told *how* to do TDD; they need to know *which tests to verify*. Procedural TDD prompts ("write the test first, red, green, refactor") increased regressions in the TDAD study, while targeted impact context reduced them (arXiv:2603.17973):
 
 | Approach | Regressions |
 |---|---|
@@ -30,20 +30,18 @@ Always for bugfixes, features, refactors, behavior changes, and any patch that w
 ## The cycle
 
 ```
-SNAPSHOT → [REPRODUCE, bugfix only] → IMPLEMENT → IMPACT → VERIFY ⇄ CORRECT → COVERAGE → SUBMIT
+TOOLCHAIN → SNAPSHOT → [REPRODUCE, bugfix only] → IMPLEMENT → IMPACT → VERIFY ⇄ CORRECT → COVERAGE → SUBMIT
 ```
 
 Run the cycle per logical unit: after each task, or after each module when a change spans independent modules. Never only at the end — accumulated changes hide which edit broke what. Rule of thumb: if `git diff --stat` shows more than 3-4 files in different modules, run IMPACT before moving to the next module.
 
 ### 0. Discover the toolchain
 
-Read `package.json` (with the file-read tool) for the test, coverage, lint and typecheck scripts, and identify the runner the `test` script invokes (jest, vitest, `node --test`, mocha, ...). Never assume a fixed command. Inside /scrapup:forge, use the `toolchain` note instead.
+Read `package.json` (with the file-read tool) for the test, coverage, lint and typecheck scripts, and identify the runner the `test` script invokes (jest, vitest, `node --test`, mocha, ...). If there is no `package.json`, read the stack's manifest (pyproject.toml, go.mod, ...) or ask the user. Never assume a fixed command. Inside /scrapup:forge, use the `toolchain` note instead.
 
 ### 1. SNAPSHOT — record the state before editing
 
 Find the tests related to the files you are about to change (IMPACT methods below, applied to the target files) and run them once. Record which already fail: those are **pre-existing** and are not regressions of this patch. Inside the forge, the `baseline` note already provides this; run the snapshot only for tests it does not list.
-
-This replaces "revert your change to check whether a failure is pre-existing".
 
 ### 2. REPRODUCE — bugfix only
 
@@ -51,7 +49,7 @@ Write a test that reproduces the bug and **fails** for the right reason (assert 
 
 ### 3. IMPLEMENT
 
-Read the code, find the root cause or feature location, make the minimal change. Do not add unrelated improvements: each extra file expands the impact surface. In JS/TS, navigate by symbol (recipe R1 of /scrapup:expert-lsp), edit by symbol (R3) and check diagnostics (R4) when the mcp-serena tools are available.
+Read the code, find the root cause or feature location, make the minimal change. Do not add unrelated improvements: each extra file expands the impact surface. In JS/TS, navigate by symbol (recipe R1 of /scrapup:expert-lsp), edit by symbol (R3) and check diagnostics (R4) when the Serena tools are available.
 
 ### 4. IMPACT — find the affected tests
 
@@ -60,10 +58,12 @@ For **every changed file**, find the tests that exercise it. Use the first avail
 | # | Method | When | How |
 |---|---|---|---|
 | A | **Runner-native** (preferred for plain JS/TS) | jest or vitest | jest: `npx jest --listTests --findRelatedTests <changed files>`; vitest: `npx vitest related <changed files> --run`. The runner resolves the real import graph, including re-exports. |
-| B | **LSP** | JS/TS with the mcp-serena tools available | Recipe R2 of /scrapup:expert-lsp per changed public symbol; if the tools are unresponsive, follow its fallback rule (ask the user before continuing without them). |
+| B | **LSP** | JS/TS with the Serena tools available | Recipe R2 of /scrapup:expert-lsp per changed public symbol; if the tools are unresponsive, follow its fallback rule (ask the user before continuing without them). |
 | C | **Import search** | Any stack, or `node --test`/mocha | `rg -l "from.*<module>\|require.*<module>" --glob '*.{test,spec}.{js,ts}' --glob '*.e2e-spec.ts'` |
 | D | **Convention** | Nothing else found | Map source to test paths following the repo's pattern; discover it with `rg --files --glob '*.{test,spec}.*' \| head -20`. |
-| E | **`tdad` test map** | Python only | `pip install tdad && tdad index .`, then `rg '<changed file>' .tdad/test_map.txt`. |
+| E | **`tdad` test map** | Python only | Ask the user before installing `tdad` (pip); otherwise fall back to methods C/D. Then `tdad index .` and `rg '<changed file>' .tdad/test_map.txt`. |
+
+Method B uses /scrapup:expert-lsp recipe R2.
 
 Priority when there are many tests: **direct** (imports the changed code) > **coverage** (same module, indirect path) > **transitive** (1-3 hops) > **import-only**.
 
@@ -90,7 +90,7 @@ All impacted tests pass, with no new errors or warnings → go to COVERAGE. Any 
 3. Fix the implementation; prefer changing your code over changing tests. A test is changed only when it measures something other than the intended contract.
 4. Re-run the full impacted set, not only the fixed test.
 
-An **iteration** is one CORRECT → VERIFY pass. After the **3rd** failed iteration, stop the inline cycle and run /scrapup:systematic-debugging: the problem is context or diagnosis, not typing. After the **5th**, stop and return `DEFER` (see Output). If a fix needs a significant redesign, reconsider the approach before iterating.
+An **iteration** is one CORRECT → VERIFY pass. After the **3rd** failed iteration, stop the inline cycle and run /scrapup:systematic-debugging: the problem is context or diagnosis, not typing. Read its `status`: `RESOLVED` or `NO_ROOT_CAUSE` → continue the cycle; `ARCHITECTURE_REVIEW` or `NEEDS_USER` → return `DEFER` with that status as `reason`. The counter continues after systematic-debugging; the 5th failed iteration overall returns `DEFER` (see Output). If a fix needs a significant redesign, reconsider the approach before iterating.
 
 ### 7. COVERAGE — cover what the patch adds or changes
 
@@ -121,8 +121,8 @@ Return this block to the caller (or to the user when invoked directly):
 
 ```text
 tdad_result: SUBMIT_READY | DEFER
-reason: <one line; required for DEFER>
-impact_method: [runner-native | lsp | rg | convention | tdad-map]
+reason: <one line for DEFER; `-` when SUBMIT_READY>
+impact_method: <comma-separated list of {runner-native, lsp, rg, convention, tdad-map}; rg = method C>
 tests_run: <test files>
 pre_existing_failures: <tests, or none>
 coverage: <percent of changed lines | unmeasured>
@@ -159,7 +159,7 @@ Any of these means: stop, run IMPACT, verify, then submit.
 |---|---|
 | Too many impacted tests (>50) | Run them anyway, ordered by priority. |
 | Failure you believe is unrelated | Check the SNAPSHOT/`baseline`; if the test is not there, it is a regression of this patch. |
-| Flaky test | Re-run 2-3 times; if inconsistent, report it as pre-existing flaky and continue. |
+| Flaky test | Re-run twice; if inconsistent, report it as pre-existing flaky and continue. |
 | Cannot determine impact | Run wider; include uncertain tests. |
 | CORRECT does not converge | 3rd iteration → /scrapup:systematic-debugging; 5th → `DEFER`. |
 

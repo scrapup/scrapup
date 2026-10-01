@@ -1,6 +1,6 @@
 ---
 name: blueprint
-description: "Drives Spec-Driven Development (SDD) for Node.js (NestJS/Fastify) projects: the full 3-phase flow (spec.md, plan.md, tasks.md) with user approval per phase, or the incremental flow via single-tasks.md (low impact, up to 5 TFs, no spec/plan). Also diagnoses pre-existing documentation and reviews SDD artifacts. Use when the user says \"specify this feature\", \"create spec/plan/tasks\", \"write user stories\", \"review the spec\", \"analyze these requirements\", \"especificar feature\" or \"criar user stories\", or when another skill needs SDD artifacts produced from scratch. Do NOT use for generic implementation plans (use /scrapup:writing-plans), open-ended idea exploration (use /scrapup:brainstorming), the Inception brief.md (use /scrapup:inception), or executing TF/US (use /scrapup:forge)."
+description: "Drives Spec-Driven Development (SDD) for Node.js (NestJS/Fastify) projects: the full 3-phase flow (spec.md, plan.md, tasks.md) with user approval per phase, or the incremental flow via single-tasks.md (low impact, up to 5 TFs, no spec/plan). Also diagnoses pre-existing documentation and reviews SDD artifacts. Use when the user says \"specify this feature\", \"create spec/plan/tasks\", \"write user stories\", \"review the spec\", \"analyze these requirements\" or \"review the SDD artifacts\", or when another skill needs SDD artifacts produced from scratch. Do NOT use for generic implementation plans (use /scrapup:writing-plans), open-ended idea exploration (use /scrapup:brainstorming), the Inception brief.md (use /scrapup:inception), or executing TF/US (use /scrapup:forge)."
 user-invocable: true
 paths: docs/specs/**/*.md
 ---
@@ -31,7 +31,7 @@ Write the produced artifacts (`spec.md`, `plan.md`, `tasks.md`, `single-tasks.md
 
 | Topic | Reference | Load when |
 |---|---|---|
-| Existing documentation analysis | [references/document-analysis.md](references/document-analysis.md) | The user provides pre-existing docs (PRDs, PM specs, loose requirements, Notion exports, spreadsheets) or asks for a diagnosis/review of them |
+| Existing documentation analysis | [references/document-analysis.md](references/document-analysis.md) | The user provides pre-existing docs (PRDs, PM specs, loose requirements, Notion exports, spreadsheets), asks for a diagnosis/review of them, or SDD artifacts already exist (review mode) |
 | Per-phase checklists | [references/checklists.md](references/checklists.md) | Starting any phase — create the todos from it |
 | Engineering philosophy | [philosophy.md](philosophy.md) | Designing architecture (Phase 2) or checking a proposal against the Ironclad principles |
 | Flow diagram | [blueprint-flow.puml](blueprint-flow.puml) | Explaining the end-to-end flow to the user |
@@ -62,13 +62,18 @@ digraph sdd_entry {
     node [shape=box];
 
     start [label="New demand" shape=ellipse];
+    existing [label="SDD artifacts\nalready exist?" shape=diamond];
+    review [label="Review mode\n(document-analysis.md,\npreserve IDs)"];
     triage [label="Low impact,\nfew files,\n<= 5 Tasks?" shape=diamond];
     incremental [label="single-tasks.md\n(self-contained TFs)"];
     full [label="Full flow\nspec -> plan -> tasks.md"];
     st_review [label="User approves\nsingle-tasks.md?" shape=diamond];
     implement_i [label="Implementation" shape=doublecircle];
 
-    start -> triage;
+    start -> existing;
+    existing -> review [label="yes"];
+    existing -> triage [label="no"];
+    review -> triage [label="change requested"];
     triage -> incremental [label="yes"];
     triage -> full [label="no or >5 TF"];
     incremental -> st_review;
@@ -76,6 +81,15 @@ digraph sdd_entry {
     st_review -> implement_i [label="approved"];
 }
 ```
+
+## Existing SDD Artifacts (Review Mode)
+
+Entry point when SDD artifacts already exist in the workspace (`spec.md`, `plan.md`, `tasks.md`, `single-tasks.md`) or the user asks to review them.
+
+1. Run [references/document-analysis.md](references/document-analysis.md) in **review mode** over the existing artifacts.
+2. **Preserve every existing ID** (`BR-XX`, `US-XX`, `TF-XX-YY`) — never renumber.
+3. **Output:** the analysis report (section 4 of `document-analysis.md`). Do not rewrite artifacts during the review.
+4. If the user then asks for changes or a new demand on top of the artifacts, continue at **Impact triage** (step 5 of **Artifact Production**) and update the artifacts in place with user approval; ask for a User Story ID only for **new** User Stories.
 
 ## Existing Documentation Analysis
 
@@ -95,9 +109,9 @@ digraph sdd_production {
     start [label="No SDD artifacts\nin the workspace" shape=ellipse];
     docs_exist [label="User provided\nexisting docs?" shape=diamond];
     analyze_docs [label="Existing Documentation\nAnalysis"];
-    brainstorm [label="Explore intent and scope\nwith the user\n(brainstorming skill)"];
+    brainstorm [label="Explore intent and scope\nwith the user\n(/scrapup:brainstorming)"];
     analyze [label="Analyze workspace:\ncode, configs, schemas,\nroutes, modules, tests"];
-    refine [label="Refinement loop\n(max 20 cycles):\nDiscovery Mode criterion\nmet?" shape=diamond];
+    refine [label="Refinement loop\n(Blocking Information Rule):\nDiscovery Mode criterion\nmet?" shape=diamond];
     timeout [label="Report: insufficient\ninformation\nStop" shape=doublecircle];
     triage [label="Low impact,\nfew files,\n<= 5 Tasks?" shape=diamond];
     incremental [label="Produce single-tasks.md\n(self-contained TFs)"];
@@ -113,7 +127,7 @@ digraph sdd_production {
     brainstorm -> analyze;
     analyze -> refine;
     refine -> triage [label="satisfactory"];
-    refine -> timeout [label="> 20 cycles"];
+    refine -> timeout [label="stop condition\nreached"];
     triage -> incremental [label="yes"];
     triage -> full [label="no or > 5 TF"];
     incremental -> gate;
@@ -125,15 +139,12 @@ digraph sdd_production {
 
 ### Steps
 
-0. **Docs analysis (if provided):** run **Existing Documentation Analysis**. Its report feeds brainstorming — do not repeat questions the diagnosis already answered.
+0. **Docs analysis (if provided):** run **Existing Documentation Analysis**. Its report feeds /scrapup:brainstorming — do not repeat questions the diagnosis already answered.
 1. **Brainstorming:** explore intent and scope via /scrapup:brainstorming. When step 0 produced a report, pass its coverage and gaps as input.
 2. **Workspace analysis:** existing code, configs, schemas, routes, modules, tests — to understand what exists and avoid duplication.
-3. **Refinement loop** (max 20 cycles):
-   - On doubts or inconsistencies: ask the user
-   - Receive the answer and re-evaluate
-   - Increment the cycle
+3. **Refinement loop:** ask the user per the **Blocking Information Rule** (see **Discovery Mode**), receive the answer and re-evaluate.
    - **Exit criterion (observable):** planning is "satisfactory" when the **Discovery Mode** criterion is met — every section of the target artifact's template has enough information and no blocking placeholders remain (`[INSERT_VALUE]` in a business rule, value, range or critical limit). Only then move to triage.
-4. After **20 cycles** without meeting the exit criterion: tell the user the information is insufficient and **stop**.
+4. When the **Blocking Information Rule** stop condition is reached without meeting the exit criterion: tell the user the information is insufficient and **stop**.
 5. **Impact triage** (criteria from **When to Use**):
    - Low impact and <= 5 TF: produce `single-tasks.md` (incremental flow)
    - High impact or > 5 TF: start the full flow (Phase 1 → 2 → 3)
@@ -277,6 +288,7 @@ User provides first User Story ID = 79
 - **FORBIDDEN** to choose or infer the first User Story ID — always ask the user before writing the first new US.
 - With **N** new User Stories in `tasks.md` or `single-tasks.md`, ask **once** (the first ID) and derive the **N** IDs sequentially. Write the IDs down before drafting, so they do not get mixed up.
 - In `single-tasks.md`, even with a **single** US, the ID **also** comes from the user (do not default to `US-01`).
+- Ask for the Epic reference together with the first US ID; if none exists, write `Epic: none (incremental)` — never invent `E-XX`.
 - Applies to both flows: full (`tasks.md`) and incremental (`single-tasks.md`).
 - **Exception:** when **reviewing** a pre-existing artifact (US already recorded in the file), **keep** the assigned IDs — ask only for **new** User Stories.
 
@@ -321,17 +333,20 @@ For the Task format (incl. self-contained TF), read [templates/task-template.md]
 
 ## Discovery Mode
 
-Before generating any artifact, check that you have enough information. If critical data is missing:
+Before generating any artifact, check that you have enough information. If critical data is missing, ask per the **Blocking Information Rule** and generate the artifact **only** once the context is adequate.
 
-1. List 3 to 5 direct, objective questions
-2. Prioritize questions about edge cases, business rules, SLAs, volume
-3. Generate the artifact **only** once the context is adequate
+**Blocking Information Rule** (the single question limit for this skill — Discovery Mode, the refinement loop, document analysis and every phase):
+
+- Ask only about **blocking information**: data whose absence would force an assumption about a business rule, value, range, limit, edge case, SLA or volume.
+- At most **5 direct, objective questions per round**, most blocking first; iterate in further rounds if more remain.
+- Non-blocking gaps do not trigger questions — record them as explicit placeholders (`[INSERT_VALUE]`).
+- **Stop condition:** stop asking when no blocking placeholder remains. If the user cannot answer a blocking question, or **20 rounds** pass with blocking gaps still open, report the information as insufficient and stop.
 
 ```dot
 digraph discovery {
     node [shape=box];
     check [label="Enough information\nfor every section?" shape=diamond];
-    ask [label="Ask 3-5 objective\nquestions to the user"];
+    ask [label="Ask up to 5 blocking\nquestions to the user"];
     generate [label="Generate the artifact"];
 
     check -> ask [label="no"];
@@ -365,13 +380,4 @@ Apply the **Ironclad Philosophy** ([philosophy.md](philosophy.md)) to every arti
 
 ## Default Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js (strict TypeScript) |
-| Frameworks | NestJS or Fastify (per project) |
-| Messaging | RabbitMQ |
-| Main database | MongoDB (Mongoose) or MySQL (Prisma/Sequelize) |
-| Cache | Redis |
-| Validation | Zod (Fastify) or class-validator (NestJS) |
-| Logger | The project's structured logger |
-| Observability | OpenTelemetry |
+See **Default Stack** in [philosophy.md](philosophy.md) — apply it when the project uses it; otherwise follow the project's existing stack and record the deviation in the plan's Rationale.

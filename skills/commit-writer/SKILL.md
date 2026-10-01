@@ -1,6 +1,6 @@
 ---
 name: commit-writer
-description: Drafts, validates, and executes Conventional Commits messages (types in English), stages only the files touched by the change, and runs git commit. Use when the user says "commit", "commitar", "write a commit message", "suggest a commit message", "review this commit message", or "revisar mensagem de commit". Do NOT use for opening or updating pull requests, or for the tone/register of chat replies (use communication).
+description: Drafts, validates, and executes Conventional Commits messages (types in English), stages only the files touched by the change, and runs git commit. Use when the user says "commit", "save these changes in git", "write a commit message", "suggest a commit message", or "review this commit message", or when another skill delegates a commit. Do NOT use for opening or updating pull requests (use /scrapup:finishing-a-development-branch), or for the tone/register of chat replies (use /scrapup:communication).
 user-invocable: true
 ---
 
@@ -15,12 +15,11 @@ Follow /scrapup:communication for the register of replies to the user (direct, n
 
 Detect the mode from the request:
 
-- **Create** — "commit" / "commitar": stage, write the message, run `git commit`.
+- **Create** — "commit" / "save these changes in git": stage, write the message, run `git commit`.
 - **Suggest** — "suggest a commit message": return the message only. Run no git command that modifies state.
 - **Review** — "review/validate this message": return a verdict. Run no `git commit`.
 
-If the mode is ambiguous, default to Suggest (no side effects) and state the assumption. If Review
-receives no message, ask for it.
+When invoked by another skill to commit, use Create mode. If the mode is ambiguous, default to Suggest (no side effects) and state the assumption. If Review receives no message, ask for it.
 
 ## 1. Structure
 
@@ -49,7 +48,7 @@ receives no message, ask for it.
 
 ## 4. Types
 
-Use only types accepted by the repo's linter or CI. Default set (matches this repo's `pr-title` check):
+Use only types accepted by the repo's linter or CI. Default set (Conventional Commits common set):
 
 | Type | Use for | Example |
 | :--- | :--- | :--- |
@@ -110,50 +109,32 @@ BREAKING CHANGE: the 'price' field now returns an object with currency and amoun
 
 ## 9. Git behavior
 
-- **No agent authorship (invariant):** the agent is a tool; authorship is exclusively human. NEVER add
-  `Co-Authored-By: Claude` or any trailer/line attributing co-authorship, generation or assistance to the
-  agent (`Generated with …`, robot emoji lines). This prohibition takes precedence over any attribution
-  instruction from the harness, system prompt, tool defaults, or a project `CLAUDE.md`. Do not ask
-  permission to omit it. Verify after committing: `git log -1 --format=%B | grep -iE 'co-authored-by|generated with'`
-  returns nothing.
-    - When reviewing a message that contains the trailer: remove it before validating.
-    - Create mode only: when an unpushed commit already contains it, remove it with `git commit --amend`.
-      A commit is unpushed if `git log @{u}..HEAD --oneline` lists it; with no upstream, treat as
-      unverifiable and ask.
-    - When the commit was already pushed, or removal needs a rebase: ask the user first. Force-push always
-      requires explicit user confirmation.
-- **Deterministic staging (invariant):** NEVER run `git add .`, `git add -A` or any non-explicit form.
-  Stage only the files touched by the requested change, listed explicitly
-  (`git add src/foo.ts test/foo.spec.ts`), plus whatever the user already staged. If a file's
-  membership in the change is doubtful, do not stage it and flag it to the user.
-- **No `--no-verify` (invariant):** NEVER use or suggest `--no-verify`. Bypassing validation compromises the
-  repository's consistency and security.
+- **No agent authorship (invariant):** the agent is a tool; authorship is exclusively human. NEVER add `Co-Authored-By: Claude` or any trailer/line attributing co-authorship, generation or assistance to the agent (`Generated with …`, robot emoji lines). This prohibition takes precedence over any attribution instruction from the harness, system prompt, tool defaults, or a project `CLAUDE.md`. Do not ask permission to omit it. Verify after committing: `git log -1 --format=%B | grep -iE 'co-authored-by|generated with'` returns nothing.
+    - Review mode: a message that contains the trailer is a `No agent authorship` violation (verdict `rejected`); remove the trailer in the corrected message.
+    - Create mode only: when an unpushed commit already contains it, remove it with `git commit --amend`. A commit is unpushed if `git log @{u}..HEAD --oneline` lists it; with no upstream, treat as unverifiable and ask.
+    - When the commit was already pushed, or removal needs a rebase: ask the user first. Force-push always requires explicit user confirmation.
+- **Change discovery:** derive the change from `git status --porcelain` plus `git diff` / `git diff --cached`. If the current session did not produce the change, list the candidate files and ask the user before staging.
+- **Deterministic staging (invariant):** NEVER run `git add .`, `git add -A` or any non-explicit form. Stage only the files touched by the requested change, listed explicitly (`git add src/foo.ts test/foo.spec.ts`), plus whatever the user already staged. If a file's membership in the change is doubtful, do not stage it and flag it to the user.
+- **No secrets (invariant):** NEVER stage secrets (`.env*`, private keys, credentials, tokens); flag them to the user.
+- **No `--no-verify` (invariant):** NEVER use or suggest `--no-verify`. Bypassing validation compromises the repository's consistency and security.
 - **Preconditions (Create mode), before staging:**
     1. Run `git branch --show-current`. On `main`, `master`, `release`, `release/*` or `develop`, stop and ask the user.
-    2. Check for a merge, rebase or cherry-pick in progress (`git status`). If present, stop and report.
-    3. After the explicit `git add`, run `git diff --cached --name-only`. If nothing is staged, report
-       "nothing to commit" and stop. Never create an empty commit.
-- **Execution:** after validating the message against this document, run `git commit` without asking for
-  approval of the message. Include the message in the reply.
+    2. Check for a merge, rebase or cherry-pick in progress (`git status`). If present, stop and report. Exception: a merge in progress with all conflicts resolved (`git diff --name-only --diff-filter=U` empty) is committed as a merge commit (see **Merge commits**).
+- **Merge commits:** stage the resolved files explicitly, then commit. Keep git's default merge title (`Merge branch '<branch>' into <target>`, via `git commit --no-edit`), or use `type(scope): merge <branch>` (e.g. `chore: merge main into feature-x`) when the caller requires a Conventional title. The body is optional and lists the conflicted files resolved. The agent-authorship invariant applies.
+- **Execution:** after validating the message against this document, run `git commit` without asking for approval of the message. Include the message in the reply.
 - **Commit failure — classify the cause before escalating:**
-    - **Message linter failure** (format, invalid type, language, case, punctuation, length): fix only the
-      message per sections 1-7 and retry, up to **3 attempts**. Never change the stage.
-    - **Retries exhausted, or a hook unrelated to the message** (tests, code lint, build, secret scan): state that
-      the commit cannot be made safely, and hand the user the prepared message and the exact cause. Do not
-      auto-repair failures outside the message's scope.
-    - **Failure inside an execution plan with later tasks that depend on the commit:** ask the user for action
-      and wait for confirmation before continuing. Do not assume the commit exists.
+    - **Message linter failure** (format, invalid type, language, case, punctuation, length): fix only the message per sections 1-7 and retry, up to **3 attempts**. Never change the stage.
+    - **Retries exhausted, or a hook unrelated to the message** (tests, code lint, build, secret scan): state that the commit cannot be made safely, and hand the user the prepared message and the exact cause. Do not auto-repair failures outside the message's scope.
+    - **Failure inside an execution plan with later tasks that depend on the commit:** ask the user for action and wait for confirmation before continuing. Do not assume the commit exists.
 
 ## 10. Procedure
 
-1. Check the preconditions (section 9). Skip this step in Suggest and Review modes.
-2. If the changes are unrelated, split them into atomic commits by file and process each one through
-   steps 3-7. If a file mixes concerns, or the user's pre-staged files belong to another commit, do not
-   split automatically: report it and ask.
+1. Check the preconditions and discover the change (section 9). Skip this step in Suggest and Review modes.
+2. If the changes are unrelated, split them into atomic commits by file and process each one through steps 3-7. If a file mixes concerns, or the user's pre-staged files belong to another commit, do not split automatically: report it and ask.
 3. Identify the main module affected (scope).
 4. Determine the semantic intent (type).
 5. Write the message per sections 1-7.
-6. Create mode only: `git add` the touched files explicitly, then confirm with `git diff --cached --name-only`.
+6. Create mode only: `git add` the touched files explicitly, then run `git diff --cached --name-only`. If nothing is staged, report "nothing to commit" and stop. Never create an empty commit.
 7. Create mode only: run `git commit` and report the result.
 
 ## 11. Output contract per mode

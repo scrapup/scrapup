@@ -1,141 +1,107 @@
 ---
 name: expert-lsp
-description: "Skill canonica de regras de integracao para navegacao e edicao semantica de codigo via LSP em projetos JavaScript/TypeScript. Use quando precisar localizar simbolos, encontrar referencias/quem chama, mapear impacto preciso (quais testes rodar), editar em nivel de simbolo (replace/insert/rename), obter diagnosticos do language server, ou substituir grep/leitura de arquivo inteiro por analise semantica. O catalogo de tools e o binding do MCP vivem no command /scrapup:serena (server mcp-serena). Consumida por forge, test-driven-agentic-development e multi-spec-review."
+description: "Defines the integration rules and canonical recipes (R1-R4) for semantic navigation and symbol-level editing of JavaScript/TypeScript code through a language server (Serena MCP). Use when the user says \"find who calls this\", \"which tests does this symbol affect\", \"rename this symbol across the codebase\", \"show the structure of this file\", or when locating symbols, mapping references/impact, editing by symbol (replace/insert/rename), or reading language server diagnostics instead of grep or whole-file reads. Do NOT use for non-code files, non-JS/TS repos without a language server, or literal text search."
 user-invocable: true
 ---
 
-# Expert LSP — Regras de Navegação e Edição Semântica de Código
+# Expert LSP — Semantic Code Navigation and Editing Rules
 
-## Camadas (separação de responsabilidade)
+## Goal
 
-| Camada | Artefato | Responsabilidade |
-|--------|----------|------------------|
-| MCP | `mcp-serena` (`.mcp.json`) | Define o server |
-| Command | `/scrapup:serena` (`commands/serena.md`) | Padroniza o MCP e o **catálogo de tools** (`mcp__plugin_scrapup_mcp-serena__*`) |
-| **Expert (esta skill)** | `expert-lsp` | **Regras de integração:** quando usar, JS/TS, fluxo, integração com o ecossistema, fallback, anti-padrões |
+Semantic code analysis (symbols, references, call hierarchy, diagnostics) and symbol-level editing via a language server, instead of `grep` or whole-file reads. Primary focus: **JavaScript and TypeScript**.
 
-A skill é nomeada pelo **protocolo (LSP)**, não pelo produto: se o backend mudar, troca-se o
-command/MCP (`serena`) e estas regras sobrevivem. O catálogo concreto de tools **não** é duplicado
-aqui — vive no command `/scrapup:serena`.
+## When to use
 
-## Objetivo
+Trigger **before** falling back to `grep`/`rg` or whole-file reads whenever the task involves understanding or changing JS/TS code:
 
-Ser a **fonte única de regras** para análise semântica de código (símbolos, referências, call
-hierarchy, diagnósticos) e edição em nível de símbolo via language server, em vez de `grep`/leitura
-de arquivo inteiro. Foco primário: **JavaScript e TypeScript**.
+- Locate the definition/declaration of a function, class, method or type.
+- Find **who uses/calls** a symbol — impact, safe refactoring.
+- Find the implementations of an interface/abstraction.
+- Read only the **skeleton** of a file before diving in.
+- Edit at symbol level without rewriting the file (replace/insert/rename).
+- Get language server diagnostics for a file.
 
-## Quando usar (gatilho canônico)
+Do not use for: non-code files (markdown, config JSON), repositories without a supported language server, or when a literal text search is enough.
 
-Acionar **antes** de recorrer a `grep`/`rg` ou leitura de arquivo inteiro sempre que a tarefa
-envolva entender ou alterar código JS/TS:
+## Mandatory precondition: server and active project
 
-- Localizar definição/declaração de função, classe, método, tipo.
-- Descobrir **quem usa/chama** um símbolo — impacto, refactor seguro.
-- Encontrar implementações de uma interface/abstração.
-- Ler só o **esqueleto** de um arquivo antes de mergulhar.
-- Editar em nível de símbolo sem reescrever o arquivo (replace/insert/rename).
-- Obter diagnósticos do language server num arquivo.
+The Serena MCP server is a **user-configured prerequisite**; it is not bundled with this plugin. The tool prefix depends on the installed server name; discover it from the available tool list. The tool names in the recipes below (`find_symbol`, `find_referencing_symbols`, …) are normative; only the prefix varies.
 
-Não usar para: arquivos não-código (markdown, JSON de config), repositórios sem language server
-suportado, ou quando uma busca textual literal já basta.
+Semantic operations require an **active project** on the server. Ensure it before any tool:
 
-## Pré-condição obrigatória: projeto ativo
+1. With `--project-from-cwd`, the server auto-detects the project from the cwd's `.git`/`.serena/project.yml`.
+2. If no project is active, or the wrong one is, activate it by the repo path/name (project activation).
+3. On a repo new to the backend, the first access indexes through the language server (initial latency); later operations are fast.
+4. When in doubt, confirm the active project/language (configuration inspection).
 
-Operações semânticas exigem um **projeto ativo** no server. Garantir antes de qualquer tool:
+## Canonical recipes (JS/TS)
 
-1. Com `--project-from-cwd`, o server auto-detecta pelo `.git`/`.serena/project.yml` do cwd.
-2. Se nenhum projeto estiver ativo ou for o errado, ativar pelo path/nome do repo (ativação de projeto).
-3. Em repo novo ao backend, o primeiro acesso indexa via language server (latência inicial); operações seguintes são rápidas.
-4. Confirmar estado de projeto/linguagem ativos em caso de dúvida (inspeção de configuração).
+Reusable procedures that other skills **reference by ID** instead of reimplementing.
 
-> Os nomes de tool citados nesta skill são **ilustrativos** (referenciados por papel funcional). O catálogo completo de tools e os **nomes exatos** vivem no command `/scrapup:serena` — fonte canônica de invocação.
+### R1 — Locate / understand code (navigate by symbol)
 
-## Receitas canônicas (JS/TS)
+1. `get_symbols_overview` on the file → skeleton (top-level symbols), without reading the whole file.
+2. `find_symbol` by name/name-path → go to the target symbol.
+3. `find_declaration` → definition (go-to-definition) when the starting point is a usage.
+4. `find_implementations` → when the target is an interface/abstraction and you need the concrete implementations.
 
-Procedimentos reutilizáveis que outras skills **referenciam** em vez de reimplementar. Tools via command `/scrapup:serena`.
+### R2 — Find references / impact analysis (who uses it)
 
-### R1 — Localizar / entender código (navegar por símbolos)
+For each **changed public symbol** (exported function, class, method, type):
 
-1. `get_symbols_overview` no arquivo → esqueleto (símbolos top-level), sem ler o arquivo inteiro.
-2. `find_symbol` pelo nome/name-path → ir ao símbolo-alvo.
-3. `find_declaration` → definição (go-to-definition) quando o ponto de partida é um uso.
-4. `find_implementations` → quando o alvo é interface/abstração e você precisa das implementações concretas.
+1. `find_referencing_symbols` on the symbol → real referencers (resolves re-exports/barrel files, ignores homonyms).
+2. Chain `find_referencing_symbols` on the referencers to capture the **transitive** ones. Stop condition: chain until **no new referencers appear outside the already visited set**, capped at **3 hops**.
+3. Filter the referencing files by the project's test globs (`*.spec.ts`, `*.e2e-spec.ts`, `*.test.js`, …) when the goal is the set of impacted tests.
 
-### R2 — Descobrir referências / análise de impacto (quem usa)
+**Output:** a deduplicated list of **impacted test file paths** (each path once, even when reached through multiple paths).
 
-Para cada **símbolo público alterado** (função, classe, método, tipo exportado):
+Advantage over `rg`/grep by name: removes false positives (homonyms) and false negatives (re-exports/barrels → missed transitive references).
 
-1. `find_referencing_symbols` no símbolo → referenciadores reais (resolve re-exports/barrel files, ignora homônimos).
-2. Encadear `find_referencing_symbols` nos referenciadores para capturar os **transitivos**. Critério de parada: encadear até **não surgirem novos referenciadores fora dos já visitados**, com teto de **3 hops**.
-3. Filtrar os arquivos referenciadores por globs de teste do projeto (`*.spec.ts`, `*.e2e-spec.ts`, `*.test.js`, …) quando o objetivo for o conjunto de testes impactados.
+### R3 — Edit at symbol level
 
-**Saída:** lista de **paths de arquivo de teste impactados**, deduplicada (cada path uma única vez, mesmo alcançado por múltiplos caminhos).
+1. `replace_symbol_body` → replace a symbol's body without rewriting the file.
+2. `insert_after_symbol` / `insert_before_symbol` → insert relative to the definition.
+3. `rename_symbol` → rename across the codebase (language server refactoring), never a textual find-and-replace.
 
-Vantagem sobre `rg`/grep por nome: elimina falsos positivos (homônimos) e falsos negativos (re-exports/barrel → transitivos perdidos).
+### R4 — Post-edit diagnostics
 
-### R3 — Editar em nível de símbolo
+`get_diagnostics_for_file` on the changed file → language server errors/warnings (e.g., a type break) right after the change.
 
-1. `replace_symbol_body` → substituir o corpo de um símbolo sem reescrever o arquivo.
-2. `insert_after_symbol` / `insert_before_symbol` → inserir relativo à definição.
-3. `rename_symbol` → renomear em todo o codebase (refactoring do language server), nunca find-and-replace textual.
+## Ecosystem integration
 
-### R4 — Diagnóstico pós-edição
+Consumers reference R1-R4 by ID; each consumer owns its own policy for when to apply them. R2 implements method B (LSP) of TDAD IMPACT; /scrapup:test-driven-agentic-development owns the method order.
 
-`get_diagnostics_for_file` no arquivo alterado → erros/warnings do language server (ex.: quebra de tipo) imediatamente após a mudança.
+## MCP unavailability and fallback
 
-## Integração com o ecossistema
+Distinguish **three cases** — the handling differs:
 
-- **/scrapup:test-driven-agentic-development (IMPACT):** aplicar a **receita R2** como Método 0
-  da descoberta de testes; **R1** no IMPLEMENT (localizar causa-raiz) e **R4** após editar. O TDAD
-  decide a política (quando rodar, mapeamento de prioridade, fallback para `rg`/convenção); o **como**
-  é desta skill.
-- **/scrapup:forge:** **R1** para carregar só o símbolo relevante ao validar
-  tipos/interfaces e resolver placeholders; **R3** (`replace_symbol_body`) na resolução de conflitos
-  de merge.
-- **/scrapup:multi-spec-review:** a integração é **no pré-pack** (scripts `msr-*.sh`), não no
-  prompt dos reviewers — eles permanecem sem exploração (RN-11). Grafo/refs pré-computados podem
-  ser injetados no pack de forma determinística.
-- **/scrapup:brainstorming:** **insumo de exploração opcional** no passo "Explore project
-  context" de brainstorm brownfield JS/TS — **R1** (forma do símbolo-alvo) e **R2** (dependentes /
-  blast radius) para fundamentar as 2-3 abordagens. Não é etapa obrigatória nem meio de execução;
-  greenfield/conceitual dispensa o LSP e a indisponibilidade do MCP não bloqueia o brainstorm.
+**Case 0 — Serena tools absent from the tool list:** the server is not configured for this user. State it once and fall back to `rg`/Read.
 
-## Indisponibilidade do MCP e fallback
+**Case A — automatic fallback (no question):** the language is not supported by the language server, or the repo legitimately has no applicable server. LSP does not apply here. State it and fall back to `rg`/Read.
 
-Distinguir **dois casos** — o tratamento é diferente:
+**Case B — Serena tools present but failing (should work):** connection error, timeout, server down, or the project does not activate in a JS/TS repo where LSP should operate. **Do not silently continue without the server.** Before any fallback:
 
-**Caso A — fallback automático (sem perguntar):** a linguagem não é suportada pelo language server,
-ou o repo legitimamente não tem servidor aplicável. Aqui o LSP não se aplica. Declarar e cair para
-`rg`/`Read`.
+1. Report the factual symptom (which tool, which error).
+2. **Ask the user** which action to take, offering options:
+   - reconnect/restart the server (e.g., `/reload-plugins` or re-activate the project);
+   - continue this task with the `rg`/Read fallback (accepted degradation, with the precision loss stated);
+   - abort the task.
+3. Proceed only **after the answer**. The choice holds for the current task; re-evaluate if the symptom reappears.
 
-**Caso B — MCP `mcp-serena` não responsivo (deveria funcionar):** erro de conexão, timeout, server
-caído, ou o projeto não ativa num repo JS/TS onde o LSP deveria operar. **Não seguir silenciosamente
-sem o MCP.** Antes de qualquer fallback:
+Never treat Case B as Case A: falling back to `rg` on your own when the server is only temporarily unavailable hides an environment failure and degrades precision without the user knowing.
 
-1. Reportar o sintoma factual (qual tool, qual erro).
-2. **Perguntar ao utilizador** qual ação tomar, oferecendo opções:
-   - tentar reconectar/reiniciar o `mcp-serena` (ex.: `/reload-plugins` ou reativar o projeto);
-   - prosseguir nesta tarefa com fallback `rg`/`Read` (degradação aceita, com a perda de precisão declarada);
-   - abortar a tarefa.
-3. Só prosseguir **após a resposta**. A escolha vale para a tarefa corrente; reavaliar se o sintoma reaparecer.
+## Mandatory rules
 
-Nunca tratar o Caso B como Caso A: cair para `rg` por conta própria quando o MCP só está
-temporariamente indisponível esconde uma falha de ambiente e degrada a precisão sem o utilizador saber.
+1. Activate the correct project before any semantic tool.
+2. Prefer semantic tools over `grep`/whole-file reads when the target is a JS/TS symbol.
+3. Rename via `rename_symbol`, not a textual find-and-replace.
+4. Edit via `replace_symbol_body`/`insert_*` instead of rewriting the file.
+5. Fallback per the "MCP unavailability and fallback" section: Cases 0 and A are automatic; **Case B requires asking the user before continuing without the server**. Never fail — or degrade — silently.
+6. Do not use Serena's `execute_shell_command` to run tests/builds; that belongs to the native shell tools and the caller's test gate (e.g., /scrapup:forge).
 
-## Regras obrigatórias
+## Anti-patterns
 
-1. Ativar o projeto correto antes de qualquer tool semântica.
-2. Preferir tools semânticas a `grep`/leitura integral quando o alvo é um símbolo em JS/TS.
-3. Refactor de nome via `rename_symbol`, não find-and-replace textual.
-4. Edição via `replace_symbol_body`/`insert_*` em vez de reescrever o arquivo.
-5. Fallback conforme a secção "Indisponibilidade do MCP e fallback": Caso A automático; **Caso B exige
-   consultar o utilizador antes de seguir sem o MCP**. Nunca falhar — nem degradar — silenciosamente.
-6. Não usar `execute_shell_command` do Serena para rodar testes/build; isso pertence às tools
-   nativas de shell e ao gate de testes da /scrapup:forge (seção 5, passo 5).
-
-## Anti-padrões
-
-- Rodar `rg "import.*Service"` para impacto quando `find_referencing_symbols` está disponível.
-- Ler arquivo inteiro só para localizar uma função (`get_symbols_overview` + `find_symbol` bastam).
-- Editar via string-match frágil onde `replace_symbol_body` faz a edição cirúrgica.
-- Operar tools semânticas sem projeto ativo (resultados vazios/errados).
+- Running `rg "import.*Service"` for impact when `find_referencing_symbols` is available.
+- Reading a whole file just to locate a function (`get_symbols_overview` + `find_symbol` suffice).
+- Editing via fragile string matching where `replace_symbol_body` makes the surgical edit.
+- Running semantic tools without an active project (empty/wrong results).

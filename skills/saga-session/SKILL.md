@@ -1,305 +1,288 @@
 ---
 name: saga-session
-description: Use quando o utilizador declarar saga-session, tracking de sessao, iniciar debug longo com analise de logs, investigar problemas multi-sessao, registrar decisoes de arquitetura cross-project, ou pedir para rastrear progresso de trabalho via saga-mcp.
+description: Tracks cross-session progress, decisions and context in the local mcp-saga tracker (projects, epics, tasks, notes). Use when the user says "saga-session", "track progress", "resume last session", or for multi-session debugging and cross-project architecture decisions. Do NOT use for one-off fixes or the debugging method itself (use /scrapup:systematic-debugging).
 user-invocable: true
 ---
 
 # Session Tracker (saga-mcp)
 
-Rastreia progresso, decisoes e contexto entre sessoes usando o MCP server `mcp-saga` (saga-mcp com SQLite local). Skill isolada — ativa-se por declaracao explicita do utilizador ou por gatilho de outra skill.
+Tracks progress, decisions and context across sessions using the `mcp-saga` MCP server (saga-mcp backed by local SQLite).
 
-## Quando usar
+## When to use
 
-- Utilizador declara "saga-session", "rastrear progresso", "usar o saga", ou equivalente de tracking explicito
-- Debug longo com analise de logs (multi-servico, multi-sessao)
-- Investigacao de incidentes com multiplas hipoteses
-- Registrar decisao de arquitetura cross-project (padroes NestJS, Fastify, etc.)
-- Retomar trabalho iniciado em sessao anterior
+- The user says "saga-session", "track progress", "use saga", or an equivalent explicit tracking request
+- Long debugging with log analysis (multi-service, multi-session)
+- Incident investigation with multiple hypotheses
+- Recording a cross-project architecture decision (framework conventions, messaging strategies, etc.)
+- Resuming work started in an earlier session
 
-## Quando NAO usar
+## When NOT to use
 
-- Sessoes curtas e pontuais (uma pergunta, um fix rapido)
-- Trabalho que nao sera retomado em outra sessao
-- Quando o utilizador nao declarou tracking
+- Short, one-off sessions (a single question, a quick fix)
+- Work that will not be resumed in another session
+- When the user has not asked for tracking
 
 ## MCP Server
 
-| Parametro | Valor |
+| Parameter | Value |
 |---|---|
 | **Server** | `mcp-saga` |
-| **Invocacao** | as tools do MCP `mcp-saga` (`mcp__mcp-saga__*`) |
-| **DB** | `~/.claude/.tracker.db` (auto-criado no primeiro uso) |
+| **Invocation** | the `mcp-saga` MCP tools (`mcp__mcp-saga__*`) |
+| **DB** | `~/.claude/.tracker.db` (auto-created on first use) |
 
-**Nota:** skills e documentacao podem referir-se ao conceito como "mcp-saga" ou "saga". O nome do MCP server é `mcp-saga`; as tools aparecem como `mcp__mcp-saga__<tool>`.
+Skills and docs may call the concept "mcp-saga" or "saga". The MCP server name is `mcp-saga`; its tools appear as `mcp__mcp-saga__<tool>` (or with an equivalent plugin prefix).
 
-## Tools de referencia rapida
+### Prerequisite: saga tools available
 
-| Tool | Leitura | Descricao |
+Before any tracking action, check that the `mcp__mcp-saga__*` tools (or equivalent saga tools such as `tracker_dashboard`, `note_save`) are in your tool list.
+
+If they are absent:
+
+1. Tell the user that the `mcp-saga` MCP server is required and is not bundled with scrapup.
+2. Stop, or proceed **without persistence** only if the user explicitly agrees.
+3. Never fabricate state: do not claim a project, task or note was read or saved when no saga tool ran.
+
+## Quick tool reference
+
+| Tool | Read | Description |
 |---|---|---|
-| `tracker_init` | | Inicializar tracker e criar primeiro projeto |
-| `tracker_dashboard` | ro | Visao geral do projeto com resumo |
-| `tracker_session_diff` | ro | O que mudou desde um timestamp |
-| `tracker_search` | ro | Busca cross-entity (projetos, epicos, tasks, notes) |
-| `activity_log` | ro | Historico de mudancas com filtros |
-| `project_create` | | Criar projeto |
-| `project_list` | ro | Listar projetos |
-| `project_update` | | Atualizar projeto. **Destrutivo** quando muda status para `archived` (remove projeto temporario do fluxo ativo) |
-| `epic_create` | | Criar epico dentro de projeto |
-| `epic_list` | ro | Listar epicos |
-| `task_create` | | Criar task com dependencias opcionais |
-| `task_list` | ro | Listar/filtrar tasks |
-| `task_get` | ro | Task com subtasks, notes, comments, deps |
-| `task_update` | | Atualizar task (auto-logs, auto-block/unblock) |
-| `task_batch_update` | | Atualizar multiplas tasks |
-| `subtask_create` | | Criar subtask(s) — suporta batch |
-| `subtask_update` | | Atualizar subtask |
-| `comment_add` | | Adicionar comment a uma task |
-| `comment_list` | ro | Listar comments de uma task |
-| `note_save` | | Criar ou atualizar note (upsert) |
-| `note_list` | ro | Listar notes com filtros |
-| `note_search` | ro | Busca full-text em notes |
-| `note_delete` | | Remover note. **Destrutivo e irreversivel** — so notes de trabalho de projeto temporario, sob guardrail (ver "Regras de lifecycle") |
-| `template_create` | | Criar template reutilizavel |
-| `template_apply` | | Aplicar template com substituicao de variaveis |
-| `tracker_export` | ro | Exportar projeto como JSON |
-| `tracker_import` | | Importar projeto de JSON |
+| `tracker_init` | | Initialize the tracker and create the first project |
+| `tracker_dashboard` | ro | Project overview with summary |
+| `tracker_session_diff` | ro | What changed since a timestamp |
+| `tracker_search` | ro | Cross-entity search (projects, epics, tasks, notes) |
+| `activity_log` | ro | Change history with filters |
+| `project_create` | | Create a project |
+| `project_list` | ro | List projects |
+| `project_update` | | Update a project. **Destructive** when setting status to `archived` (removes a temporary project from the active flow) |
+| `epic_create` | | Create an epic inside a project |
+| `epic_list` | ro | List epics |
+| `task_create` | | Create a task with optional dependencies |
+| `task_list` | ro | List/filter tasks |
+| `task_get` | ro | Task with subtasks, notes, comments, deps |
+| `task_update` | | Update a task (auto-logs, auto-block/unblock) |
+| `task_batch_update` | | Update multiple tasks |
+| `subtask_create` | | Create subtask(s) — supports batch |
+| `subtask_update` | | Update a subtask |
+| `comment_add` | | Add a comment to a task |
+| `comment_list` | ro | List a task's comments |
+| `note_save` | | Create or update a note (upsert) |
+| `note_list` | ro | List notes with filters |
+| `note_search` | ro | Full-text search over notes |
+| `note_delete` | | Remove a note. **Destructive and irreversible** — only work notes of a temporary project, under the guardrail (see "Rules") |
+| `template_create` | | Create a reusable template |
+| `template_apply` | | Apply a template with variable substitution |
+| `tracker_export` | ro | Export a project as JSON |
+| `tracker_import` | | Import a project from JSON |
 
-**ro** = read-only (seguro para consulta).
+**ro** = read-only (safe to query).
 
-## Ciclo de vida da sessao
+## Session lifecycle
 
 ```dot
 digraph session_lifecycle {
-    "Sessao inicia" [shape=doublecircle];
-    "Projeto existe?" [shape=diamond];
+    "Session starts" [shape=doublecircle];
+    "Project exists?" [shape=diamond];
     "tracker_dashboard + tracker_session_diff" [shape=box];
-    "tracker_init (criar projeto)" [shape=box];
-    "Classificar trabalho" [shape=diamond];
-    "Fluxo: Execucao" [shape=box];
-    "Fluxo: Debug/Investigacao" [shape=box];
-    "Fluxo: Decisao de Arquitetura" [shape=box];
-    "Trabalhar (atualizar tasks, comments, notes)" [shape=box];
-    "Sessao encerra" [shape=doublecircle];
+    "tracker_init (create project)" [shape=box];
+    "Classify work" [shape=diamond];
+    "Flow: Execution" [shape=box];
+    "Flow: Debug/Investigation" [shape=box];
+    "Flow: Architecture Decision" [shape=box];
+    "Work (update tasks, comments, notes)" [shape=box];
+    "Session ends" [shape=doublecircle];
 
-    "Sessao inicia" -> "Projeto existe?";
-    "Projeto existe?" -> "tracker_dashboard + tracker_session_diff" [label="sim"];
-    "Projeto existe?" -> "tracker_init (criar projeto)" [label="nao"];
-    "tracker_init (criar projeto)" -> "Classificar trabalho";
-    "tracker_dashboard + tracker_session_diff" -> "Classificar trabalho";
-    "Classificar trabalho" -> "Fluxo: Execucao" [label="implementacao"];
-    "Classificar trabalho" -> "Fluxo: Debug/Investigacao" [label="debug/logs"];
-    "Classificar trabalho" -> "Fluxo: Decisao de Arquitetura" [label="decisao"];
-    "Fluxo: Execucao" -> "Trabalhar (atualizar tasks, comments, notes)";
-    "Fluxo: Debug/Investigacao" -> "Trabalhar (atualizar tasks, comments, notes)";
-    "Fluxo: Decisao de Arquitetura" -> "Trabalhar (atualizar tasks, comments, notes)";
-    "Trabalhar (atualizar tasks, comments, notes)" -> "Sessao encerra";
+    "Session starts" -> "Project exists?";
+    "Project exists?" -> "tracker_dashboard + tracker_session_diff" [label="yes"];
+    "Project exists?" -> "tracker_init (create project)" [label="no"];
+    "tracker_init (create project)" -> "Classify work";
+    "tracker_dashboard + tracker_session_diff" -> "Classify work";
+    "Classify work" -> "Flow: Execution" [label="implementation"];
+    "Classify work" -> "Flow: Debug/Investigation" [label="debug/logs"];
+    "Classify work" -> "Flow: Architecture Decision" [label="decision"];
+    "Flow: Execution" -> "Work (update tasks, comments, notes)";
+    "Flow: Debug/Investigation" -> "Work (update tasks, comments, notes)";
+    "Flow: Architecture Decision" -> "Work (update tasks, comments, notes)";
+    "Work (update tasks, comments, notes)" -> "Session ends";
 }
 ```
 
-### 1. Inicio de sessao
+### 1. Session start
 
-1. `project_list` — verificar se ja existe projeto relevante
-2. Se existe: `tracker_dashboard` para visao geral + `tracker_session_diff`. Obter o baseline do `since` a partir da ultima note `progress` (`note_list` filtrando tipo `progress`, pegar a mais recente — ver "Fim de sessao", passo 2), aplicando a armadilha de timezone (ver "Timezone em `tracker_session_diff`": usar o dia anterior como baseline seguro em vez de hora local exata)
-3. Se nao existe: `tracker_init` com nome e descricao do trabalho
+1. `project_list` — check whether a relevant project already exists
+2. If it exists: `tracker_dashboard` for the overview + `tracker_session_diff`. Take the `since` baseline from the latest `progress` note (`note_list` filtered by type `progress`, most recent — see "Session end", step 2), applying the timezone pitfall (see "Timezone in `tracker_session_diff`": use the previous day as a safe baseline instead of an exact local time)
+3. If it does not exist: `tracker_init` with the work's name and description (or `project_create` if the DB already has projects — see "`tracker_init` vs `project_create`")
 
-### 2. Durante a sessao
+### 2. During the session
 
-| Evento | Acao no mcp-saga |
+| Event | mcp-saga action |
 |---|---|
-| Iniciar uma tarefa | `task_update` → status `in_progress` |
-| Concluir uma tarefa | `task_update` → status `done` |
-| Descoberta relevante | `comment_add` na task ativa |
-| Decisao tomada | `note_save` com tipo `decision` |
-| Bloqueio encontrado | `note_save` com tipo `blocker` |
-| Contexto para proxima sessao | `note_save` com tipo `context` |
+| Start a task | `task_update` → status `in_progress` |
+| Finish a task | `task_update` → status `done` |
+| Relevant finding | `comment_add` on the active task |
+| Decision made | `note_save` with type `decision` |
+| Blocker found | `note_save` with type `blocker` |
+| Context for the next session | `note_save` with type `context` |
 
-### 3. Fim de sessao
+### 3. Session end
 
-1. Atualizar status das tasks em andamento
-2. `note_save` tipo `progress` com resumo do que foi feito e o que falta
-3. Se ha proximos passos claros, criar tasks para a proxima sessao
+1. Update the status of in-progress tasks
+2. `note_save` type `progress` summarizing what was done and what remains
+3. If the next steps are clear, create tasks for the next session
 
-## Fluxo: Debug / Investigacao de logs
+### Example: resuming a session
 
-Quando a sessao envolve debug longo ou analise de logs (Loki, Grafana), estruturar o tracking assim:
+- **User says:** "Resume last session on the payment-retry bug."
+- **Actions:** `project_list` → finds `debug:{repo}:payment-retry`; `note_list` type `progress` → latest note dated 2026-03-21; `tracker_dashboard` on the project; `tracker_session_diff` with `since: 2026-03-20T00:00:00`; `task_list` → hypothesis H2 `in_progress`.
+- **Result:** report to the user the last progress summary, what changed since, the open hypothesis H2 and any `blocker` notes; continue on H2 with `task_update`/`comment_add`.
 
-1. **Criar epic** `debug: <descricao do problema>` no projeto
-2. **Criar tasks** para cada hipotese ou linha de investigacao
-3. **Registrar achados** como comments nas tasks correspondentes:
-   - Queries LogQL executadas e resultados
-   - Trace IDs relevantes
-   - Timestamps de eventos criticos
-4. **Registrar conclusao** como note tipo `technical`:
-   - Root cause identificado
-   - Servicos afetados
-   - Correcao aplicada ou proposta
-5. **Se nao resolvido**: note tipo `blocker` com estado atual e proximos passos
+## Flow: Debug / log investigation
 
-### Modelo de comment para investigacao
+When the session involves long debugging or log analysis (in your log backend), structure tracking like this:
 
-```
-Hipotese: [descricao]
-Query: {app="servico"} |= "erro" | json
-Resultado: [X entries encontradas, padrao Y observado]
-Conclusao: [confirmada/descartada/parcial — motivo]
-```
+1. **Create epic** `debug: <problem description>` in the project
+2. **Create tasks** for each hypothesis or line of investigation
+3. **Record findings** as comments on the corresponding tasks:
+   - Log queries run and their results
+   - Relevant trace IDs
+   - Timestamps of critical events
+4. **Record the conclusion** as a note of type `technical`:
+   - Root cause identified
+   - Affected services
+   - Fix applied or proposed
+5. **If unresolved**: a `blocker` note with the current state and next steps
 
-## Fluxo: Decisoes de arquitetura cross-project
-
-Para decisoes que afetam multiplos projetos (padroes NestJS, convencoes Fastify, estrategias de mensageria, etc.):
-
-1. **Projeto dedicado**: manter um projeto `architecture-decisions` no mcp-saga para decisoes transversais
-2. **Note tipo `decision`** com estrutura:
+### Investigation comment template
 
 ```
-Titulo: [nome da decisao]
-Contexto: [por que essa decisao foi necessaria]
-Opcoes consideradas: [lista]
-Decisao: [o que foi escolhido]
-Consequencias: [impacto nos projetos]
-Projetos afetados: [lista]
+Hypothesis: [description]
+Query: [log query in your log backend's syntax]
+Result: [X entries found, pattern Y observed]
+Conclusion: [confirmed/discarded/partial — reason]
 ```
 
-3. **Tags via titulo**: prefixar com dominio — `[nestjs]`, `[fastify]`, `[rabbitmq]`, `[observability]`
-4. **Busca posterior**: `note_search` com keyword do dominio ou `tracker_search` para localizar decisoes
+## Flow: Cross-project architecture decisions
 
-### Exemplos de decisoes cross-project
+For decisions that affect multiple projects (framework conventions, messaging strategies, etc.):
 
-- `[nestjs] Padrao de interceptors para wide events`
-- `[fastify] Plugin structure para autenticacao`
-- `[rabbitmq] Estrategia de DLQ e reprocessamento`
-- `[observability] Convencao de exception.slug`
-- `[testing] Estrategia de mocks para o broker RabbitMQ`
+1. **Dedicated project**: keep one `architecture-decisions` project in mcp-saga for cross-cutting decisions
+2. **Note of type `decision`** with this structure:
 
-## Fluxo: Execucao de tarefas (com SDD)
+```
+Title: [decision name]
+Context: [why this decision was needed]
+Options considered: [list]
+Decision: [what was chosen]
+Consequences: [impact on projects]
+Affected projects: [list]
+```
 
-Quando usado em conjunto com a skill /scrapup:forge ou planos SDD:
+3. **Tags via title**: prefix with the domain — e.g. `[api]`, `[messaging]`, `[observability]`, `[testing]`
+4. **Later lookup**: `note_search` with the domain keyword, or `tracker_search` to locate decisions
 
-1. Importar a estrutura do `tasks.md` como Project > Epics > Tasks
-2. Manter dependencias entre tasks (`depends_on`)
-3. Atualizar status conforme executa: `todo` → `in_progress` → `done`
-4. Comments para breadcrumbs de implementacao
-5. Dashboard como checkpoint entre tasks
+### Example cross-project decisions
 
-#### Integracao com a execucao em contexto limpo
+- `[api] Interceptor pattern for request logging`
+- `[api] Plugin structure for authentication`
+- `[messaging] Dead-letter queue and reprocessing strategy`
+- `[observability] Error identifier naming convention`
+- `[testing] Mocking strategy for the message broker`
 
-Durante a execucao de TFs via /scrapup:forge (secao 5):
+## Flow: Task execution (with SDD)
 
-- Projeto saga: `exec:{repo}:{TF-XX-YY|US-XX}` (temporario, lifecycle da execucao)
-- Cada executor: `task_update` (status in_progress) + `comment_add` (breadcrumb com o hash do commit)
-- Notes de contexto do projeto: `toolchain` e `baseline` (tipo `context`), guardrails (tipo `technical`, prefixo `guardrail:`), `metrics`, `lesson`, `progress`: ver a tabela "Tipos de note e quando usar" — fonte unica de definicao
+Follow /scrapup:forge; project/note conventions below. forge names its project `exec:{repo}:{TF-XX-YY|US-XX}` and uses the note types defined in "Note types and when to use them".
 
-## Regras
+## Note types and when to use them
 
-1. **Nao iniciar tracking sem declaracao** — o utilizador deve ativar esta skill explicitamente ou outra skill deve referencia-la
-2. **Nao duplicar projetos** — sempre verificar `project_list` antes de criar
-3. **Comments > notes para contexto de task** — comments ficam vinculados a task, notes sao independentes
-4. **Notes para conhecimento transversal** — decisoes, padroes, blockers que transcendem uma task
-5. **Minimo overhead** — nao rastrear micro-acoes; focar em mudancas de status, descobertas e decisoes
-6. **Timestamps em notes de progresso** — incluir data/hora para facilitar `tracker_session_diff`
-
-## Tipos de note e quando usar
-
-| Tipo | Quando | Usado por |
+| Type | When | Used by |
 |---|---|---|
-| `decision` | Escolha de arquitetura, padrao, lib, abordagem. Precedentes de contradicao entre specs | saga-session, multi-spec-review |
-| `context` | Informacao que o proximo agente precisa para retomar. Notas `toolchain` e `baseline` da execucao | saga-session, forge |
-| `technical` | Detalhes tecnicos: root cause, mecanismo, comportamento. Findings de self-review. Baseline de homogeneidade. Grafo source-to-test | saga-session, forge, multi-spec-review (via saga_writes de reviewer-homogeneity e reviewer-testing) |
-| `blocker` | Impedimento ativo que precisa de resolucao | saga-session |
-| `progress` | Resumo de sessao — o que foi feito, o que falta. Resumo de consolidacao e execucao | saga-session, forge |
-| `override` | Decisao do utilizador para pular validacao (10 ciclos esgotados, --no-verify autorizado) | forge |
-| `metrics` | Dados quantitativos pos-execucao (tempo total, ciclos, rotacoes de contexto, taxa de sucesso). Metricas de performance dos agents reviewer-* | forge, multi-spec-review |
-| `lesson` | Licao aprendida qualitativa (padroes de falha, o que funcionou, sugestoes recorrentes do self-review) | forge |
-| `guardrail` | Instrucoes acumulativas derivadas de falhas de iteracao. No MCP, gravar como `technical` com prefixo `guardrail:` no titulo | forge |
-| `meeting` | Notas de reuniao relevantes ao trabalho | saga-session |
-| `general` | Qualquer coisa que nao se encaixa nos acima | saga-session |
+| `decision` | Choice of architecture, pattern, library, approach | saga-session |
+| `context` | Information the next agent needs to resume. The execution's `toolchain` and `baseline` notes | saga-session, forge |
+| `technical` | Technical details: root cause, mechanism, behavior. Self-review findings | saga-session, forge |
+| `blocker` | Active impediment that needs resolution | saga-session |
+| `progress` | Session summary — what was done, what remains. Consolidation and execution summary | saga-session, forge |
+| `override` | User decision to skip validation (10 cycles exhausted, `--no-verify` authorized) | forge |
+| `metrics` | Post-execution quantitative data (total time, cycles, context rotations, success rate) | forge |
+| `lesson` | Qualitative lesson learned (failure patterns, what worked, recurring self-review suggestions) | forge |
+| `guardrail` | Cumulative instructions derived from iteration failures. In the MCP, save as `technical` with the `guardrail:` title prefix | forge |
+| `meeting` | Meeting notes relevant to the work | saga-session |
+| `general` | Anything that does not fit the above | saga-session |
 
-O uso de `technical` para baseline de homogeneidade (schema de tags `D{n}`, meta-note, templates) e definido em [`baseline-saga.md`](./baseline-saga.md) — fonte canonica para esse fluxo.
+## Saga project registry
 
-## Registro de Colecoes (projetos saga)
+Projects that live in the saga SQLite DB, by owner. Owners are this skill and /scrapup:forge.
 
-Fonte canonica de todos os projetos que vivem no SQLite do saga. Skills consumidoras (forge, multi-spec-review) referenciam esta secao para convencoes — nao definem regras proprias de persistencia. Agents reviewer-* operam em readonly e declaram escritas via `saga_writes` que o multi-spec-review executa.
+### Persistent collections
 
-### Colecoes persistentes
+Projects that accumulate data across sessions. **NEVER archive, NEVER delete notes.**
 
-Projetos que acumulam dados entre sessoes. **NUNCA arquivar, NUNCA deletar notes.**
-
-| Projeto | Padrao de nome | Criado por | Proposito |
+| Project | Name pattern | Created by | Purpose |
 |---|---|---|---|
-| Baseline de homogeneidade | `homogeneity:{repo}` | multi-spec-review (via saga_writes de /reviewer-homogeneity) | Padroes do legado por dimensao (D1-D10) com confidence %. Protocolo completo em [`baseline-saga.md`](./baseline-saga.md) |
-| Precedentes de contradicao | `contradiction-precedents:{repo}` | multi-spec-review (Layer 3) | Decisoes do utilizador sobre contradicoes entre specs. Isolado por repositorio — mesma contradicao pode ter resolucao diferente entre repos |
-| Decisoes de arquitetura | `architecture-decisions` | saga-session (manual) | Decisoes cross-project (padroes NestJS, Fastify, mensageria). Projeto unico global |
-| Grafo de testes | `test-graph:{repo}` | multi-spec-review (via saga_writes de /reviewer-testing) | Mapeamento source-to-test por modulo, construido incrementalmente a cada review. Notes tipo `technical` com titulo `map:{directorio}` |
-| Telemetria multi-spec-review | `scrapup` | multi-spec-review (orquestrador, Layer 3) | Consumo de tokens e limitacoes declaradas por execucao. Projeto unico global; notes `telemetry:{repo}:{ts}`. Schema em `skills/multi-spec-review/references/telemetry-schema.md`. Escrita exclusiva do orquestrador — agents nunca escrevem aqui |
+| Architecture decisions | `architecture-decisions` | saga-session (manual) | Cross-project decisions (framework conventions, messaging). Single global project |
 
-### Colecoes temporarias
+### Temporary collections
 
-Projetos criados para uma execucao e arquivados apos conclusao.
+Projects created for one run and archived when it completes.
 
-| Projeto | Padrao de nome | Criado por | Cleanup |
+| Project | Name pattern | Created by | Cleanup |
 |---|---|---|---|
-| Review multi-spec | `review:{repo}:{timestamp}` | multi-spec-review (Layer 1) | `project_update` → archived + `note_delete` de notes `findings:*` |
-| Execucao TF/US | `exec:{repo}:{TF-XX-YY\|US-XX}` | forge §4.2 | `project_update` → archived apos a validacao funcional confirmada pelo utilizador |
-| Debug/Investigacao | `debug:{repo}:{slug}` | saga-session (manual) | Arquivar quando investigacao conclui |
+| TF/US execution | `exec:{repo}:{TF-XX-YY\|US-XX}` | /scrapup:forge ("4.2 Prepare TFs") | /scrapup:forge archives it (`project_update` → archived) after the user confirms functional validation ("Final Verification") |
+| Debug/Investigation | `debug:{repo}:{slug}` | saga-session (manual) | Archive when the investigation concludes |
 
-### Convencao de nomes de projeto
+### Project naming convention
 
-| Prefixo | Quando usar | Persistencia |
+| Prefix | When to use | Persistence |
 |---|---|---|
-| `homogeneity:` | Baseline de padroes do legado por repo | Persistente |
-| `contradiction-precedents:` | Decisoes de contradicao entre specs por repo | Persistente |
-| `architecture-decisions` | Projeto unico global de decisoes cross-project | Persistente |
-| `test-graph:` | Grafo incremental source-to-test por repo | Persistente |
-| `scrapup` | Telemetria global do multi-spec-review (consumo + limitacoes) | Persistente |
-| `review:` | Review temporario do multi-spec-review | Temporario |
-| `exec:` | Execucao de tarefa/US pelo forge | Temporario |
-| `debug:` | Sessao de debug/investigacao | Temporario |
+| `architecture-decisions` | Single global project for cross-project decisions | Persistent |
+| `exec:` | Task/US execution by forge | Temporary |
+| `debug:` | Debug/investigation session | Temporary |
 
-Usar **sempre** o prefixo correspondente ao criar projetos. Permite queries via `project_list` filtrando por prefixo de nome.
+**Always** use the matching prefix when creating projects, so `project_list` can be filtered by name prefix.
 
-### Regras de lifecycle
+## Rules
 
-1. **Persistentes** (`homogeneity:`, `contradiction-precedents:`, `architecture-decisions`, `test-graph:`, `scrapup`): NUNCA arquivar, NUNCA deletar notes. Atualizar via upsert (`note_save` com `id` existente)
-2. **Temporarios** (`review:`, `exec:`, `debug:`): arquivar (`project_update` status `"archived"`) apos conclusao. Notes de trabalho podem ser deletadas no cleanup
-3. **Nao tocar projetos de outras skills** — cada skill gerencia apenas os seus projetos. Regra critica para multi-spec-review: cleanup so toca `review:*`, nunca `homogeneity:*` nem `contradiction-precedents:*`
-4. **Verificar antes de criar** — sempre `project_list` antes de `project_create` para evitar duplicatas
-5. **Guardrail de operacao destrutiva** — antes de `note_delete` ou de `project_update` para `archived`, confirmar via `project_list` que (a) o nome do projeto casa com um prefixo temporario (`review:`, `exec:`, `debug:`) **e** (b) esta skill e a owner do projeto (criou-o no fluxo atual). Em duvida de ownership, **abster-se** da operacao destrutiva e reportar ao utilizador — nunca deletar/arquivar por inferencia
+1. **Do not start tracking without a request** — the user must activate this skill explicitly, or another skill must reference it
+2. **Check before creating** — always `project_list` before `project_create` to avoid duplicate projects
+3. **Comments over notes for task context** — comments stay linked to the task; notes are independent
+4. **Notes for cross-cutting knowledge** — decisions, patterns, blockers that outlive a single task
+5. **Minimal overhead** — do not track micro-actions; focus on status changes, findings and decisions
+6. **Timestamps in progress notes** — include date/time to make `tracker_session_diff` easier
+7. **Persistent** (`architecture-decisions`): NEVER archive, NEVER delete notes. Update via upsert (`note_save` with an existing `id`)
+8. **Temporary** (`exec:`, `debug:`): archive (`project_update` status `"archived"`) after completion. Work notes may be deleted during cleanup
+9. **Do not touch other owners' projects** — each owner manages only its own projects: this skill manages `debug:` and `architecture-decisions`; /scrapup:forge manages `exec:`
+10. **Destructive-operation guardrail** — before `note_delete` or `project_update` to `archived`, confirm via `project_list` that (a) the project name matches a temporary prefix (`exec:`, `debug:`) **and** (b) the prefix belongs to the acting skill per rule 9 (`exec:` → /scrapup:forge; `debug:` → this skill) — ownership is decided by prefix, not by whether the project was created in the current session, so resumed projects can still be archived. If ownership is in doubt, **refrain** from the destructive operation and report to the user — never delete/archive by inference
 
-## Padroes de consulta cross-skill
+## Cross-skill query patterns
 
-Queries que qualquer skill pode usar para encontrar dados de outras skills no saga.
+Queries any skill can use to find data in saga.
 
-| Objetivo | Query |
+| Goal | Query |
 |---|---|
-| Encontrar baseline de homogeneidade | `project_list` → filtrar por nome `homogeneity:{repo}` |
-| Buscar precedente de contradicao | `project_list` → filtrar `contradiction-precedents:{repo}` → `note_search` no projeto |
-| Verificar execucao anterior de TF | `tracker_search` com keyword da TF (ex: "TF-01-03") |
-| Obter metricas de execucoes passadas | `note_search` tipo `metrics` |
-| Recuperar licoes aprendidas | `note_search` tipo `lesson` + keywords tecnologicas |
-| Verificar toolchain e baseline da execucao ativa | `note_search` tipo `context` no projeto `exec:*` ativo |
-| Decisoes de arquitetura por dominio | `note_search` no projeto `architecture-decisions` com keyword `[nestjs]`, `[fastify]`, etc. |
-| Obter grafo de testes do repo | `project_list` → filtrar `test-graph:{repo}` → `note_list` |
+| Check an earlier TF execution | `tracker_search` with the TF keyword (e.g. "TF-01-03") |
+| Get metrics from past executions | `note_search` type `metrics` |
+| Retrieve lessons learned | `note_search` type `lesson` + technology keywords |
+| Check toolchain and baseline of the active execution | `note_search` type `context` in the active `exec:*` project |
+| Architecture decisions by domain | `note_search` in the `architecture-decisions` project with a keyword such as `[api]`, `[messaging]` |
 
-## Armadilhas conhecidas
+## Known pitfalls
 
-### Timezone em `tracker_session_diff`
+### Timezone in `tracker_session_diff`
 
-O SQLite armazena timestamps em UTC. O parametro `since` e comparado diretamente contra esses valores. Se o fuso local e BRT (UTC-3), passar `2026-03-21T15:00:00` local nao encontra registros salvos como `2026-03-21 12:00:00` UTC.
+SQLite stores timestamps in UTC; convert to the user's timezone when reporting. The `since` parameter is compared directly against those values. If the local timezone is UTC-3, passing `2026-03-21T15:00:00` local does not match records saved as `2026-03-21 12:00:00` UTC.
 
-**Solucao**: usar o timestamp do dia anterior como baseline seguro (ex: `2026-03-20T00:00:00`) em vez de hora local exata. O custo e trazer atividade extra, que o resumo do diff compensa.
+**Solution**: use the previous day as a safe baseline (e.g. `2026-03-20T00:00:00`) instead of an exact local time. The cost is extra activity, which the diff summary absorbs.
 
-### `note_search` com multiplas keywords
+### `note_search` with multiple keywords
 
-Busca com duas ou mais palavras combinada com filtro `note_type` pode retornar vazio mesmo quando a note existe. O full-text search do SQLite trata multiplas palavras como AND implicito entre tokens indexados, e o filtro adicional pode restringir demais.
+A search with two or more words combined with a `note_type` filter may return empty even when the note exists. SQLite full-text search treats multiple words as an implicit AND between indexed tokens, and the extra filter can over-restrict.
 
-**Solucao**: buscar por keyword individual sem filtro de tipo, ou usar `tracker_search` como alternativa — este busca cross-entity sem limitacao de tipo.
+**Solution**: search by a single keyword without the type filter, or use `tracker_search` — it searches cross-entity without the type restriction.
 
-### `tracker_search` — match por token exato
+### `tracker_search` — exact token match
 
-A busca por keyword faz match exato por token, nao por substring. Buscar "validar" nao encontra "validacao", e "nest" nao encontra "nestjs".
+Keyword search matches exact tokens, not substrings. Searching "valid" does not find "validation", and "api" does not find "apis".
 
-**Solucao**: usar a palavra completa e exata. Para decisoes de arquitetura, manter prefixos consistentes nos titulos (`[nestjs]`, `[fastify]`) e buscar pelo prefixo completo.
+**Solution**: use the complete, exact word. For architecture decisions, keep consistent title prefixes (`[api]`, `[messaging]`) and search by the full prefix.
 
 ### `tracker_init` vs `project_create`
 
-`tracker_init` so cria projeto se o DB estiver vazio. Se ja existe qualquer projeto (mesmo arquivado), retorna o projeto existente. Para criar projetos adicionais, usar `project_create` diretamente.
+`tracker_init` only creates a project if the DB is empty. If any project already exists (even archived), it returns the existing one. To create additional projects, call `project_create` directly.

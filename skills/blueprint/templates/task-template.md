@@ -3,7 +3,7 @@
 ## Usage Context
 
 This template defines the mandatory format for each **Task** generated in Phase 3 (`tasks.md` or `single-tasks.md`) of Spec-Driven Development.
-Tasks are the **last planning level** of the Scrum hierarchy (Epic > User Story > Task) and must be **technical, prescriptive and unambiguous** — they are consumed by AI agents (forge, clean-context executors) and by engineers for direct implementation.
+Tasks are the **last planning level** of the Scrum hierarchy (Epic > User Story > Task) and must be **technical, prescriptive and unambiguous** — they are consumed by AI agents (/scrapup:forge) and by engineers for direct implementation.
 
 **`single-tasks.md` (incremental):** each Task must be **self-contained**: include in the TF body all the context, touched files/paths, acceptance criteria and DoD needed to implement it **without** consulting `spec.md` or `plan.md` (they do not exist in this flow).
 
@@ -14,14 +14,11 @@ Tasks are the **last planning level** of the Scrum hierarchy (Epic > User Story 
 | **Epic** | Product management | Backlog tracker | Macro context received by the engineering team |
 | **User Story** | Engineering team | tasks.md | Value deliverable to the product (registered during refinement) |
 | **Task (TF)** | Engineering team | tasks.md | Atomic unit of work — **this template** |
-| **RT (iteration)** | Agent (execution) | saga (mcp-saga) | Operational step inside a TF — **section 4.7, optional** |
-
-**RTs (iterations)** are the clean-context iterative execution level (section 5 of forge). They exist **only in saga** — never in the backlog tracker. They are optional: simple TFs run without RT decomposition.
 
 ## Constraints
 
 - **NEVER** write generic specifications — use real method, table and queue names when the context provides them
-- **NEVER** suggest HTTP webhooks for internal communication without asking whether event-driven via RabbitMQ would fit better
+- **NEVER** suggest HTTP webhooks for internal communication without asking whether event-driven messaging would fit better
 - If configuration data is missing, insert explicit placeholders such as `[INSERT_ROUTING_KEY]` and warn the user
 - Each Task must cover **a single domain of responsibility**
 - **NEVER** invent the `TF-XX-YY` ID. `XX` **inherits exactly** the parent User Story ID (derived from the first User Story ID provided by the user) and `YY` is **locally sequential** inside the US (`01`, `02`, `03`...). See **User Story Identifiers** in `SKILL.md`
@@ -34,7 +31,7 @@ Tasks are the **last planning level** of the Scrum hierarchy (Epic > User Story 
 ### [TF-XX-YY] [System] Clear, Objective Task Title
 
 **User Story:** [US-XX] User Story name
-**Epic:** [E-XX] Epic name (product management reference)
+**Epic:** [E-XX] Epic name (product management reference) | none (incremental)
 **System:** [Exact repository name]
 **Priority:** [P0 | P1 | P2]
 
@@ -104,7 +101,7 @@ Generate PlantUML (text-based) diagrams when they add value:
 
 #### 4. Execution Guidance
 
-Operational metadata consumed by the agent (forge, clean-context executor) or by the engineer while implementing this Task. It is not a prompt to copy — it is structured information to guide execution.
+Operational metadata consumed by the executing agent (/scrapup:forge) or by the engineer while implementing this Task. It is not a prompt to copy — it is structured information to guide execution.
 
 **4.1 Input Context**
 
@@ -135,7 +132,7 @@ Constraints **specific to this TF** (global constraints — Ironclad, `any` — 
 
 | Skill | Reason |
 |---|---|
-| `test-driven-agentic-development` | [e.g., TF changes business logic and requires checking impacted tests before commit] |
+| /scrapup:test-driven-agentic-development | [e.g., TF changes business logic and requires checking impacted tests before commit] |
 | [skill] | [reason] |
 
 **4.6 Exit Criteria**
@@ -147,35 +144,15 @@ The agent MUST stop when ALL are true:
 
 If 3 consecutive attempts fail on the same criterion → escalate to the user.
 
-**4.7 Iterative Decomposition (clean context) — OPTIONAL**
+**4.7 Decomposition Hint — OPTIONAL**
 
-> Fill in when: the TF touches 3+ files, the DoD has 4+ criteria,
-> the estimate is > 2h of implementation, or execution will be delegated
-> to clean-context executors (forge, section 5).
-> Simple TFs (P2, 1 file, DoD with 1-2 items) do NOT need this subsection.
+> Fill in only for complex TFs (see **When to Add a Decomposition Hint** below).
+> List the RT steps; the executor (/scrapup:forge) owns limits and tracking.
 
-**Execution mode:** `clean-context`
-**Max validation cycles:** [N — default 10, forge limit]
-**Saga project:** `exec:{repo}:{TF-XX-YY}`
-
-| # | RT / iteration | Completion Criterion | Depends on |
+| # | RT step | Completion Criterion | Depends on |
 |---|---|---|---|
 | RT-01 | [Atomic action — e.g., "Create the schema and schema test"] | [Verifiable: test passes, file exists] | — |
-| RT-02 | [Atomic action — e.g., "Implement the DTO with Zod validation"] | [Verifiable: DTO unit test passes] | RT-01 |
-| RT-03 | [Atomic action] | [Verifiable] | RT-01 |
-
-**Saga mapping:**
-
-| Blueprint Concept | Saga Concept | Tool |
-|---|---|---|
-| TF-XX-YY | Task in the `exec:*` project epic | `task_create` |
-| RT-01, RT-02... | Subtask of the task | `subtask_create` |
-| RT completion criterion | Evidence comment on the subtask | `comment_add` |
-| Handoff between iterations | Note of type `context` | `note_save` |
-
-**Exit signals:**
-- Every RT with status `done` in saga → TF complete
-- Context rotation exhausted (1 restart) without progress → escalate to the user
+| RT-02 | [Atomic action — e.g., "Implement the DTO with validation"] | [Verifiable: DTO unit test passes] | RT-01 |
 
 #### 5. Acceptance Tests (Definition of Done)
 
@@ -197,7 +174,7 @@ If 3 consecutive attempts fail on the same criterion → escalate to the user.
 | **P1** | Essential — core functionality | UseCases, Controllers, Consumers |
 | **P2** | Complementary — improvement or optimization | Cache, metrics, additional logs |
 
-## When to Use Section 4.7 (clean context)
+## When to Add a Decomposition Hint (Section 4.7)
 
 | Indicator | Section 4.7? |
 |---|---|
@@ -206,5 +183,5 @@ If 3 consecutive attempts fail on the same criterion → escalate to the user.
 | TF touches 3+ files in different domains | YES |
 | DoD with 4+ verifiable criteria | YES |
 | Estimate > 2h of implementation | YES |
-| User asks for clean-context execution per subtask | YES |
+| User asks for step-by-step execution | YES |
 | TF involves integration + logic + persistence | YES |

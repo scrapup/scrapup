@@ -1,17 +1,11 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: Creates isolated git worktrees with directory selection, gitignore safety check, dependency setup and baseline test verification. Use when the user says "create a worktree", "isolate this work", or before parallel plan execution. Do NOT use for removing worktrees or merging (use /scrapup:finishing-a-development-branch) or for sequential tasks on a single branch.
 ---
 
 # Using Git Worktrees
 
-## Overview
-
-Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
-
 **Core principle:** Systematic directory selection + safety verification = reliable isolation.
-
-**Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
 
 ## Directory Selection Process
 
@@ -33,17 +27,19 @@ ls -d worktrees 2>/dev/null      # Alternative
 grep -i "worktree.*director" CLAUDE.md 2>/dev/null
 ```
 
-**If preference specified:** Use it without asking.
+**If a single, unambiguous preference is specified:** Use it without asking.
 
-### 3. Ask User
+**If ambiguous** (multiple matches, conflicting locations, or a preference in another CLAUDE.md): ask the user (Architect-Validator).
 
-If no directory exists and no CLAUDE.md preference:
+### 3. Ask the User
+
+If no directory exists and no CLAUDE.md preference, ask the user (Architect-Validator):
 
 ```
 No worktree directory found. Where should I create worktrees?
 
 1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
+2. ~/.config/scrapup/worktrees/<project-name>/ (global location)
 
 Which would you prefer?
 ```
@@ -56,82 +52,77 @@ Which would you prefer?
 
 ```bash
 # Check if directory is ignored (respects local, global, and system gitignore)
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+# Check the directory you will actually use (<dir> = .worktrees or worktrees)
+git check-ignore -q <dir>
 ```
 
-**If NOT ignored:**
-
-Per Jesse's rule "Fix broken things immediately":
-1. Add appropriate line to .gitignore
-2. Commit the change
-3. Proceed with worktree creation
+**If not ignored:** add `<dir>/` to `.gitignore`, stage only that file (`git add .gitignore`), and ask the user before committing; never commit on the default branch without consent.
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
-### For Global Directory (~/.config/superpowers/worktrees)
+### For Global Directory (~/.config/scrapup/worktrees/$project/)
 
-No .gitignore verification needed - outside project entirely.
+No .gitignore verification needed — outside project entirely.
 
 ## Creation Steps
 
-### 1. Detect Project Name
+Shell variables do not persist between tool calls. Run Steps 1-2 in a **single** Bash call with the values set as literals at the top, and afterwards use the resulting absolute path in every command (a `cd` does not carry over to the next call).
+
+### 1. Detect Project Name and Branch Name
+
+Define `BRANCH_NAME` from the task (e.g. `feature/<task-slug>`); if the task does not imply one, ask the user. `LOCATION` is the directory chosen above: `.worktrees`, `worktrees` or `global`.
+
+### 2. Create Worktree (single Bash call)
 
 ```bash
+LOCATION=<.worktrees|worktrees|global>
+BRANCH_NAME=<branch-name>
 project=$(basename "$(git rev-parse --show-toplevel)")
-```
 
-### 2. Create Worktree
+# Stop if the branch already exists (see Failure Handling)
+git show-ref --verify --quiet "refs/heads/$BRANCH_NAME" && { echo "branch exists"; exit 1; }
 
-```bash
 # Determine full path
 case $LOCATION in
   .worktrees|worktrees)
     path="$LOCATION/$BRANCH_NAME"
     ;;
-  ~/.config/superpowers/worktrees/*)
-    path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
+  global)
+    path="$HOME/.config/scrapup/worktrees/$project/$BRANCH_NAME"
     ;;
 esac
 
 # Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
-cd "$path"
+git worktree add "$path" -b "$BRANCH_NAME" && cd "$path" && pwd   # report this absolute path
 ```
+
+BAD: `path="~/.config/..."` — a quoted `~` is not expanded and creates a literal `~` directory.
+GOOD: `path="$HOME/.config/scrapup/worktrees/$project/$BRANCH_NAME"`.
 
 ### 3. Run Project Setup
 
-Auto-detect and run appropriate setup:
+Auto-detect from project files. For Node projects, detect the package manager from the lockfile and delegate setup to `/scrapup:setup-node-env`:
 
-```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
-
-# Rust
-if [ -f Cargo.toml ]; then cargo build; fi
-
-# Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
-
-# Go
-if [ -f go.mod ]; then go mod download; fi
-```
+| Lockfile / manifest | Setup |
+|---------------------|-------|
+| `pnpm-lock.yaml` | `pnpm install` (via `/scrapup:setup-node-env`) |
+| `yarn.lock` | `yarn install` (via `/scrapup:setup-node-env`) |
+| `package-lock.json` / `package.json` | `npm install` (via `/scrapup:setup-node-env`) |
+| `Cargo.toml` | `cargo build` |
+| `poetry.lock` / `pyproject.toml` | `poetry install` |
+| `requirements.txt` | `pip install -r requirements.txt` |
+| `go.mod` | `go mod download` |
+| none of the above | Skip dependency install |
 
 ### 4. Verify Clean Baseline
 
-Run tests to ensure worktree starts clean:
-
-```bash
-# Examples - use project-appropriate command
-npm test
-cargo test
-pytest
-go test ./...
-```
+Run the project's test command (from `package.json`/`Makefile`/CI config) to ensure the worktree starts clean.
 
 **If tests fail:** Report failures, ask whether to proceed or investigate.
 
 **If tests pass:** Report ready.
+
+**If no test suite exists:** report "no test suite found" and do not claim a clean baseline.
 
 ### 5. Report Location
 
@@ -141,81 +132,54 @@ Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
 
-## Quick Reference
+## Failure Handling
 
-| Situation | Action |
-|-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
-| Directory not ignored | Add to .gitignore + commit |
-| Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
+| Failure | Action |
+|---------|--------|
+| Branch `$BRANCH_NAME` already exists | Do not reuse or overwrite; report it and ask the user for a new name or whether to attach a worktree to the existing branch |
+| Worktree path already exists | Do not delete it; check `git worktree list`, report and ask the user |
+| `git worktree add` fails | Report the exact error; do not retry with `--force`; escalate to the user |
+| Dependency setup fails | Report the error; for Node, defer to `/scrapup:setup-node-env`; escalate if unresolved |
+| No test suite | Report "no test suite found"; do not claim a clean baseline |
 
-## Common Mistakes
+## Quick Reference and Red Flags
 
-### Skipping ignore verification
-
-- **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
-
-### Assuming directory location
-
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
-
-### Proceeding with failing tests
-
-- **Problem:** Can't distinguish new bugs from pre-existing issues
-- **Fix:** Report failures, get explicit permission to proceed
-
-### Hardcoding setup commands
-
-- **Problem:** Breaks on projects using different tools
-- **Fix:** Auto-detect from project files (package.json, etc.)
+| Situation | Action | Why |
+|-----------|--------|-----|
+| `.worktrees/` exists | Use it (verify ignored) | Existing convention wins |
+| `worktrees/` exists | Use it (verify ignored) | Existing convention wins |
+| Both exist | Use `.worktrees/` | Hidden directory is preferred |
+| Neither exists | Check CLAUDE.md → ask the user | NEVER assume a location — it breaks project conventions |
+| CLAUDE.md ambiguous | Ask the user | Guessing between conflicting preferences is an architecture decision |
+| Directory not ignored | Add to `.gitignore`, stage only that file, ask before committing | NEVER create a project-local worktree unignored — its contents get tracked and pollute `git status` |
+| Tests fail during baseline | Report failures + ask | NEVER proceed silently — you cannot distinguish new bugs from pre-existing ones |
+| No test suite | Report "no test suite found" | NEVER claim a clean baseline without evidence |
+| Setup commands | Auto-detect from lockfile/manifest | NEVER hardcode — breaks on projects using other tools |
 
 ## Example Workflow
 
 ```
-You: I'm using the using-git-worktrees skill to set up an isolated workspace.
-
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
-[Run npm install]
+[BRANCH_NAME=feature/auth - verify branch does not exist]
+[Create worktree: git worktree add .worktrees/feature/auth -b feature/auth]
+[Detect package-lock.json - setup via /scrapup:setup-node-env]
 [Run npm test - 47 passing]
 
-Worktree ready at /Users/jesse/myproject/.worktrees/auth
+Worktree ready at /path/to/project/.worktrees/feature/auth
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
 
-## Red Flags
-
-**Never:**
-- Create worktree without verifying it's ignored (project-local)
-- Skip baseline test verification
-- Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Skip CLAUDE.md check
-
-**Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
-- Verify directory is ignored for project-local
-- Auto-detect and run project setup
-- Verify clean test baseline
-
 ## Integration
 
 **Called by:**
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
-- **subagent-driven-development** - REQUIRED before executing tasks (isolated workspace per the skill's own contract)
-- **executing-plans** - REQUIRED before executing tasks
-- **forge** - REQUIRED apenas para TFs independentes em paralelo (modo US); execução sequencial trabalha em branch, sem worktree
-- Any skill needing isolated workspace
+- `/scrapup:subagent-driven-development` — REQUIRED before executing tasks (isolated workspace per the skill's own contract)
+- `/scrapup:executing-plans` — REQUIRED before executing tasks
+- `/scrapup:forge` — REQUIRED only for independent tasks run in parallel (US mode); sequential execution works on a branch, without a worktree
+- Any skill needing an isolated workspace
 
-> Worktree é exigido por **isolamento de execução paralela**, não por toda task. Fluxos sequenciais (forge sequencial) e o `test-driven-agentic-development` (agnóstico) não o requerem.
+> A worktree is required for **parallel execution isolation**, not for every task. Sequential flows (sequential forge) and `/scrapup:test-driven-agentic-development` (agnostic) do not require it.
 
 **Pairs with:**
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
+- `/scrapup:finishing-a-development-branch` — REQUIRED for cleanup after work is complete

@@ -1,9 +1,17 @@
 // Complete implementation of condition-based waiting utilities
-// From: Lace test infrastructure improvements (2025-10-03)
-// Context: Fixed 15 flaky tests by replacing arbitrary timeouts
+// Context: Fixed flaky tests by replacing arbitrary timeouts
+// Self-contained: minimal local types stand in for the host project's event store.
 
-import type { ThreadManager } from '~/threads/thread-manager';
-import type { LaceEvent, LaceEventType } from '~/threads/types';
+export type ThreadEventType = 'AGENT_MESSAGE' | 'TOOL_CALL' | 'TOOL_RESULT' | (string & {});
+
+export interface ThreadEvent {
+  type: ThreadEventType;
+  data?: { id?: string; [key: string]: unknown };
+}
+
+export interface ThreadManager {
+  getEvents(threadId: string): ThreadEvent[];
+}
 
 /**
  * Wait for a specific event type to appear in thread
@@ -20,9 +28,9 @@ import type { LaceEvent, LaceEventType } from '~/threads/types';
 export function waitForEvent(
   threadManager: ThreadManager,
   threadId: string,
-  eventType: LaceEventType,
+  eventType: ThreadEventType,
   timeoutMs = 5000
-): Promise<LaceEvent> {
+): Promise<ThreadEvent> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 
@@ -60,10 +68,10 @@ export function waitForEvent(
 export function waitForEventCount(
   threadManager: ThreadManager,
   threadId: string,
-  eventType: LaceEventType,
+  eventType: ThreadEventType,
   count: number,
   timeoutMs = 5000
-): Promise<LaceEvent[]> {
+): Promise<ThreadEvent[]> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 
@@ -111,10 +119,10 @@ export function waitForEventCount(
 export function waitForEventMatch(
   threadManager: ThreadManager,
   threadId: string,
-  predicate: (event: LaceEvent) => boolean,
+  predicate: (event: ThreadEvent) => boolean,
   description: string,
   timeoutMs = 5000
-): Promise<LaceEvent> {
+): Promise<ThreadEvent> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 

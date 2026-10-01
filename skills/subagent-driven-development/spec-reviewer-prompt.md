@@ -20,8 +20,7 @@ Agent tool (general-purpose):
 
     ## CRITICAL: Do Not Trust the Report
 
-    The implementer finished suspiciously quickly. Their report may be incomplete,
-    inaccurate, or optimistic. You MUST verify everything independently.
+    The implementer finished suspiciously quickly. Their report may be incomplete, inaccurate, or optimistic. You MUST verify everything independently.
 
     **DO NOT:**
     - Take their word for what they implemented
@@ -56,6 +55,8 @@ Agent tool (general-purpose):
     **Verify by reading code, not by trusting report.**
 
     Report:
-    - ✅ Spec compliant (if everything matches after code inspection)
-    - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
+    - `verdict: COMPLIANT | ISSUES | CANNOT_VERIFY`
+      - COMPLIANT: everything matches after code inspection
+      - ISSUES: list each missing, extra or misunderstood item with a `file:line` reference
+      - CANNOT_VERIFY: the implementation code cannot be found or the diff is empty; state what is missing. Do not guess
 ```

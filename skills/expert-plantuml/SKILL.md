@@ -21,7 +21,7 @@ Deliver PlantUML source only — never images.
 
 ## Grounding
 
-Derive every element — actors, systems, containers, components, technologies, messages — from the provided spec, plan, code, or user input. Do not invent elements or technologies. If no spec, plan or code is in context, ask the user before drawing. If context exists but a single element or technology is missing, draw it with `TBD` in the label and list the TBDs after the diagram.
+Derive every element — actors, systems, containers, components, technologies, messages — from the provided spec, plan, code, or user input. Do not invent elements or technologies. If no spec, plan or code is in context, ask the user before drawing. If context exists but more than one core element (actor/container) is missing, ask; otherwise draw the missing element or technology with `TBD` in the label and list the TBDs after the diagram.
 
 ## Choosing the diagram type
 
@@ -82,9 +82,13 @@ Every diagram starts with `@startuml` and ends with `@enduml`.
 - **L1 (Context):** `!include <C4/C4_Context>` + `Person`, `System`, `System_Ext`, `Rel`.
 - **L2 (Container):** `!include <C4/C4_Container>` + `Container`, `ContainerDb`, `System_Boundary`, `Rel`.
 - **L3 (Component):** `!include <C4/C4_Component>` + `Component`, `Container_Boundary`, `Rel`.
+- **Deployment:** `!include <C4/C4_Deployment>` + `Deployment_Node`, `Container`, `Rel`.
+- **Dynamic:** `!include <C4/C4_Dynamic>` + numbered `Rel`/`RelIndex`.
 - **L4 (Code):** do not use C4-PlantUML; use UML class or sequence diagrams.
 
 ### Minimal boilerplate (C4 L3)
+
+Illustrative technologies — derive real ones from context.
 
 ```plantuml
 @startuml
@@ -121,7 +125,9 @@ SHOW_LEGEND()
 | Container DB | `ContainerDb(alias, "Label", "?technology", "?description")` |
 | Container boundary | `Container_Boundary(alias, "Label") { ... }` |
 | Component | `Component(alias, "Label", "?technology", "?description")` |
+| Deployment node | `Deployment_Node(alias, "Label", "?type", "?description") { ... }` |
 | Relationship | `Rel(from, to, "label", "?technology")` |
+| Indexed relationship (Dynamic) | `RelIndex(index, from, to, "label", "?technology")` |
 | Directional relationship | `Rel_R`, `Rel_L`, `Rel_U`, `Rel_D` |
 
 ### C4 rules
@@ -143,7 +149,7 @@ SHOW_LEGEND()
 2. It has a `title`.
 3. C4 only: the include matches the level, and `SHOW_LEGEND()` is present.
 4. Every relationship/arrow references a declared alias; no alias is duplicated.
-5. Run `plantuml -checkonly <file>` when the CLI is available and report "checked with plantuml -checkonly"; otherwise re-check items 1-4 plus the "General syntax errors" list manually and report "syntax not validated locally".
+5. Before running the CLI on user-supplied source, list any non-stdlib `!include`/`!includeurl` URLs and ask before fetching them. Run `plantuml -checkonly <file>` when the CLI is available and report "checked with plantuml -checkonly"; otherwise re-check items 1-4 plus the "General syntax errors" list manually and report "syntax not validated locally".
 
 ## Troubleshooting
 
@@ -168,20 +174,24 @@ SHOW_LEGEND()
 ### C4 errors (`Some diagram description contains errors`)
 
 1. Confirm the include matches the level (`C4_Context`, `C4_Container`, `C4_Component`).
-2. Run `plantuml -checkonly <file>.puml` to find the exact line (if the CLI is not in PATH, go through the C4 checklist below manually).
+2. Run `plantuml -checkonly <file>.puml` to find the exact line (if the CLI is not in PATH, go through the C4 checklist below manually). Before running the CLI on user-supplied source, list any non-stdlib `!include`/`!includeurl` URLs and ask before fetching them.
 3. Check that every `Rel` uses existing aliases.
 4. Reduce to the minimal boilerplate and reintroduce elements one at a time.
-5. If the local stdlib fails, switch to the pinned URL include.
+5. If the local stdlib fails, switch to the pinned URL include (ask before fetching it).
 
 **C4 checklist:**
 - `!include <C4/C4_*>` is available in the current environment.
 - Macros match the chosen level (L1/L2/L3).
 - `@startuml` and `@enduml` are present.
+- `title` is present.
+- `SHOW_LEGEND()` is present.
 - No duplicated alias.
 
 ## Integration
 
+- **Scope boundary:** rendering images is out of scope; callers that need a PNG run `plantuml -tpng [-DPLANTUML_LIMIT_SIZE=N] <file>.puml` themselves.
 - **/scrapup:blueprint** (consumer): when invoked from Phase 2 (`plan.md`) or Phase 3 (`tasks.md`), produce the diagrams the plan template requests. Do not invoke /scrapup:blueprint back.
+- **/scrapup:forge** (consumer): uses this skill for authoring/fixing `.puml` sources only; it renders PNGs itself via the CLI.
 
 ## References
 

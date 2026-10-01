@@ -1,17 +1,14 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Dispatches a reviewer subagent over a git SHA range using the code-reviewer.md template and acts on its findings. Use when a task or feature is complete or before merging; triggers on "request code review", "review my changes". Do NOT use for responding to review feedback (use /scrapup:receiving-code-review).
 ---
 
 # Requesting Code Review
 
-Dispatch a code-reviewer subagent (general-purpose Agent com o template [`code-reviewer.md`](code-reviewer.md)) to catch issues before they cascade.
-
-**Adaptation note (scrapup):** there is no dedicated `code-reviewer` agent-type in the ecosystem. For lightweight ad-hoc review, dispatch a **general-purpose** subagent with the `code-reviewer.md` template.
+Dispatch a code-reviewer subagent (general-purpose Agent with the template [`code-reviewer.md`](code-reviewer.md)) to catch issues before they cascade.
 
 **Boundaries (when to use something else):**
-- Consolidated multi-lens review (9 perspectives, the merge gate): use /scrapup:multi-spec-review, not this skill.
-- Opening the PR, writing PR comments, or replying to reviewers: use /scrapup:expert-pull-request.
+- For a multi-perspective review, dispatch several reviewers in parallel via /scrapup:dispatching-parallel-agents.
 - Receiving and acting on review feedback addressed to you: use /scrapup:receiving-code-review (the counterpart to this skill).
 
 **Core principle:** Review early, review often.
@@ -19,7 +16,7 @@ Dispatch a code-reviewer subagent (general-purpose Agent com o template [`code-r
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
+- After each task in /scrapup:subagent-driven-development
 - After completing major feature
 - Before merge to main
 
@@ -38,7 +35,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **Range guards (resolve before dispatch):**
 - **Initial commit / no `HEAD~1`:** `git rev-parse HEAD~1` fails. Use the empty-tree object as base: `BASE_SHA=$(git hash-object -t tree /dev/null)` (yields `4b825dc...`), which diffs the whole first commit.
-- **Empty range:** if `git diff --stat $BASE_SHA..$HEAD_SHA` is empty, do **not** dispatch and do **not** invent issues — report `No changes in range $BASE_SHA..$HEAD_SHA` and stop.
+- **Empty range:** if `git diff --stat $BASE_SHA..$HEAD_SHA` is empty, do **not** dispatch and do **not** invent issues — report `Ready to merge: No changes` (range `$BASE_SHA..$HEAD_SHA`) and stop.
 - **Range too large for one review:** if the diff exceeds the reviewer's analyzable window, the reviewer declares the limitation in its Assessment and reviews the highest-risk files first (see [`code-reviewer.md`](code-reviewer.md)); do not silently truncate without disclosure.
 
 **2. Dispatch code-reviewer subagent:**
@@ -46,11 +43,11 @@ HEAD_SHA=$(git rev-parse HEAD)
 Use the Agent tool (general-purpose subagent), filling the template at [`code-reviewer.md`](code-reviewer.md)
 
 **Placeholders** (names must match the template [`code-reviewer.md`](code-reviewer.md) exactly):
-- `{WHAT_WAS_IMPLEMENTED}` - What you just built
+- `{WHAT_WAS_IMPLEMENTED}` - One-line title of what you just built
 - `{PLAN_REFERENCE}` - What it should do (plan/requirements reference)
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
-- `{DESCRIPTION}` - Brief summary
+- `{DESCRIPTION}` - Details of the change (scope, key decisions, files touched)
 
 **3. Act on feedback:**
 - Fix Critical issues immediately
@@ -60,7 +57,7 @@ Use the Agent tool (general-purpose subagent), filling the template at [`code-re
 
 **Push-back criterion and termination (bounds autonomous loops):**
 - Push back **only** when you hold reproducible evidence the issue is wrong: a passing test, or a code snippet at `file:line` that demonstrates the behavior. Without such evidence, treat the issue as valid and fix it.
-- **One round max.** If the disagreement persists after a single re-review round, do **not** iterate further: record both positions (reviewer's claim and your evidence) and escalate to the human for the decision.
+- **One round max.** If the disagreement persists after a single re-review round, do **not** iterate further: record both positions (reviewer's claim and your evidence) and escalate to the user (Architect-Validator) for the decision.
 
 ## Example
 
@@ -82,9 +79,9 @@ HEAD_SHA=$(git rev-parse HEAD)
 [Subagent returns]:
   Strengths: Clean architecture, real tests
   Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
+    Important (Should Fix): Missing progress indicators (indexer.ts:130)
+    Minor (Nice to Have): Magic number (100) for reporting interval (indexer.ts:118)
+  Assessment: Ready to merge: With fixes
 
 You: [Fix progress indicators]
 [Continue to Task 3]
@@ -92,12 +89,12 @@ You: [Fix progress indicators]
 
 ## Integration with Workflows
 
-**Subagent-Driven Development:**
+**/scrapup:subagent-driven-development:**
 - Review after EACH task
 - Catch issues before they compound
 - Fix before moving to next task
 
-**Executing Plans:**
+**/scrapup:executing-plans:**
 - Review after each batch (3 tasks)
 - Get feedback, apply, continue
 
@@ -115,6 +112,4 @@ You: [Fix progress indicators]
 
 **If reviewer wrong:**
 - Push back only with reproducible evidence: a passing test or a `file:line` snippet that proves the behavior
-- One round max — if the disagreement persists, record both positions and escalate to the human (see "How to Request" step 3)
-
-See template at: requesting-code-review/code-reviewer.md
+- One round max — if the disagreement persists, record both positions and escalate to the user (Architect-Validator) (see "How to Request" step 3)

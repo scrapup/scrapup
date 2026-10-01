@@ -59,6 +59,7 @@ Use when the change has **low code impact**: e.g., adding a test, changing a con
 - **FORBIDDEN** to generate Tasks that span more than one domain of responsibility
 - **NEVER** combine "Create DB Table" with "Create RabbitMQ Consumer" in the same Task
 - **FORBIDDEN** in `single-tasks.md`: more than **5** `#### TF-` blocks
+- **FORBIDDEN** to invent the Epic reference — ask for it together with the first User Story ID; if none exists, write `Epic: none (incremental)`
 - **FORBIDDEN** to choose or infer `US-XX` IDs. Ask the user for the first User Story ID and derive the new User Stories sequentially from it (minimum 2-digit padding). The `US-01`, `US-02`, `US-03` examples in this template are **illustrative placeholders**; in real use the IDs start from the number the user provides and may not start at `01`. Details in **User Story Identifiers** in `SKILL.md`
 
 ## Slicing Principles
@@ -101,7 +102,7 @@ Adapt the order to the context, but keep the rule: **dependencies before depende
 
 ## Reference Epic
 
-**Epic:** [E-XX] [Epic name — as registered by product management]
+**Epic:** [E-XX] [Epic name — as registered by product management] | none (incremental)
 
 ---
 
@@ -142,7 +143,7 @@ Adapt the order to the context, but keep the rule: **dependencies before depende
 
 *Note for `single-tasks.md`:* there may be **one** User Story and up to **5** `#### TF-` blocks; the **Traceability** section may refer only to "incremental demand" or an external ticket, without spec/plan columns.
 
-*Note on Ralph Tasks (RT):* complex TFs (3+ files, 4+ DoD criteria, >2h) may include section 4.7 (Iterative Decomposition) with Ralph Tasks. RTs live **exclusively in saga** (`mcp-saga` via `subtask_create`) — never in the backlog tracker. See `templates/task-template.md` section 4.7 for the format and usage criteria.
+*Note on decomposition hints:* complex TFs (3+ files, 4+ DoD criteria, >2h) may include the optional section 4.7 (Decomposition Hint) listing RT steps; the executor (/scrapup:forge) owns limits and tracking. See `templates/task-template.md` section 4.7.
 
 ---
 

@@ -1,33 +1,41 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
-# Atualiza versão Node.js no .nvmrc e Dockerfile(s), executa nvm install/use.
+# Updates the Node.js version in the existing .nvmrc and Dockerfile(s), then
+# runs nvm install/use. Run ONLY after the user explicitly approved the version.
 #
-# Uso: update-node-version.sh <versão> [diretório-projeto]
+# Usage: update-node-version.sh <version> [project-dir]
 # Exit codes:
-#   0 — arquivos atualizados e nvm na nova versão
-#   1 — versão não informada
-#   2 — nenhum arquivo encontrado para atualizar
+#   0 — files updated and nvm on the new version
+#   1 — version missing or invalid (expected e.g. 20, 20.11, 20.11.1, v20.11.1)
+#   2 — nothing updated (no .nvmrc and no Dockerfile with `FROM node:<version>`)
+#   3 — files updated but nvm not found
+#   4 — files updated but nvm install/use failed
 
 NEW_VERSION="${1:-}"
 PROJECT_DIR="${2:-.}"
 
-if [ -z "$NEW_VERSION" ]; then
-  echo "Uso: $0 <versão> [diretório-projeto]"
+if ! printf '%s' "$NEW_VERSION" | grep -qE '^v?[0-9]+(\.[0-9]+){0,2}$'; then
+  echo "Usage: $0 <version> [project-dir]"
   exit 1
 fi
 
+# Dockerfile tags never carry the leading "v".
+IMAGE_VERSION="${NEW_VERSION#v}"
 updated=0
 
 nvmrc="${PROJECT_DIR}/.nvmrc"
-echo "$NEW_VERSION" > "$nvmrc"
-echo "UPDATED=nvmrc"
-updated=1
+if [ -f "$nvmrc" ]; then
+  echo "$NEW_VERSION" > "$nvmrc"
+  echo "UPDATED=nvmrc"
+  updated=1
+fi
 
 for name in Dockerfile Dockerfile.prod Dockerfile.deploy Dockerfile.production; do
   dockerfile="${PROJECT_DIR}/${name}"
-  if [ -f "$dockerfile" ] && grep -qiE '^FROM\s+node:' "$dockerfile"; then
-    sed -i '' -E "s/^(FROM\s+node:)[0-9]+(\.[0-9]+)*/\1${NEW_VERSION}/" "$dockerfile"
+  if [ -f "$dockerfile" ] && grep -qiE '^FROM[[:space:]]+node:[0-9]' "$dockerfile"; then
+    sed -i.bak -E "s/^([Ff][Rr][Oo][Mm][[:space:]]+node:)[0-9]+(\.[0-9]+)*/\1${IMAGE_VERSION}/" "$dockerfile" \
+      && rm -f "${dockerfile}.bak"
     echo "UPDATED=dockerfile:${dockerfile}"
     updated=1
   fi
@@ -39,12 +47,18 @@ if [ "$updated" -eq 0 ]; then
 fi
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
-  . "$NVM_DIR/nvm.sh"
-  cd "$PROJECT_DIR"
-  nvm install "$NEW_VERSION"
-  nvm use "$NEW_VERSION"
-  echo "NODE_VERSION=$(node --version)"
+if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+  echo "NVM_STATUS=not_found"
+  exit 3
 fi
 
+# shellcheck source=/dev/null
+. "$NVM_DIR/nvm.sh"
+cd "$PROJECT_DIR" || exit 4
+if ! nvm install "$NEW_VERSION" || ! nvm use "$NEW_VERSION"; then
+  echo "NVM_STATUS=failed"
+  exit 4
+fi
+
+echo "NODE_VERSION=$(node --version)"
 exit 0
