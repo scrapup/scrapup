@@ -4,6 +4,8 @@
 
 > Do *scrap* informacional à entrega forjada — software construído por um **Unified Process assistido por IA**.
 
+**[Leia o manifesto](./MANIFESTO.pt.md)** — no que acreditamos sobre software, agentes e as pessoas que o constroem.
+
 **scrapup** é um ecossistema de *skills*, *agents* e *commands* para o [Claude Code](https://claude.com/claude-code) que operacionaliza o ciclo **documentar → validar → entregar** com rigor de engenharia. O nome carrega a tese do projeto: elevar (*up*) matéria-prima (*scrap*) até software entregue, por meio de um **Unified Process (UP)** modernizado e assistido por agentes — em que o desenvolvedor deixa de ser **executor** para ser **arquiteto e validador**, enquanto os agentes conduzem os fluxos de engenharia.
 
 ## Por que existe

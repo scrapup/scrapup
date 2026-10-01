@@ -4,6 +4,8 @@
 
 > From informational scrap to forged delivery — software built by an **AI-assisted Unified Process**.
 
+**[Read the manifesto](./MANIFESTO.md)** — what we believe about software, agents, and the people who build it.
+
 **scrapup** is an ecosystem of *skills*, *agents*, and *commands* for [Claude Code](https://claude.com/claude-code) that operationalizes the **document → validate → deliver** cycle with engineering rigor. The name carries the project's thesis: raising (*up*) raw material (*scrap*) into delivered software, through a modernized, agent-assisted **Unified Process (UP)** — where the developer is repositioned from **executor** to **architect and validator**, while agents run the engineering workflows.
 
 ## Why it exists
