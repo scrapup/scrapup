@@ -31,7 +31,7 @@ trap 'rm -rf "$stage"' EXIT
 
 cp -R .claude-plugin "$stage/"
 for path in skills agents commands hooks README.md README.pt.md README.ja.md MANIFESTO.md MANIFESTO.pt.md MANIFESTO.ja.md PRINCIPLES.md LICENSE; do
-  [ -e "$path" ] && cp -R "$path" "$stage/"
+  if [[ -e "$path" ]]; then cp -R "$path" "$stage/"; fi
 done
 
 rm -f "$zip_path"
