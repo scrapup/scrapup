@@ -1,0 +1,2429 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scrapup.dev/schemas/review-result.schema.json",
+  "title": "Review result",
+  "description": "Contrato unico de retorno de todos os agents reviewer-* (agents/). Envelope comum; campos especificos de cada agent ficam em findings[].spec_metadata e lens_data, validados por spec. Regras aritmeticas (contagens em metrics, disjuncao e cobertura das dimensoes) nao sao expressaveis em JSON Schema e sao checadas pelo consumidor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "spec",
+    "dimensions_evaluated",
+    "dimensions_not_applicable",
+    "findings",
+    "positives",
+    "decision",
+    "conditions",
+    "metrics",
+    "lens_data",
+    "saga_writes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "spec": {
+      "$ref": "#/$defs/agentName"
+    },
+    "dimensions_evaluated": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "dimensions_not_applicable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dimension": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "dimension",
+          "reason"
+        ]
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "positives": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/positive"
+      }
+    },
+    "decision": {
+      "enum": [
+        "GO",
+        "GO_CONDITIONAL",
+        "NO-GO",
+        "INSUFFICIENT_CONTEXT"
+      ]
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "metrics": {
+      "$ref": "#/$defs/metrics"
+    },
+    "lens_data": {
+      "type": "object",
+      "description": "Dados especificos do agent; {} quando o agent nao define."
+    },
+    "saga_writes": {
+      "type": "array",
+      "description": "Operacoes no mcp-saga executadas por quem invocou; [] exceto em reviewer-homogeneity e reviewer-testing."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-architecture"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "SOLID Compliance",
+                "Separation of Concerns & Layers",
+                "Dependency Management",
+                "NestJS Module Design",
+                "Domain-Driven Design",
+                "External Dependencies",
+                "Architectural Consistency (Legacy)",
+                "API & Contract Design",
+                "Architecture Documentation Adherence"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "SOLID Compliance",
+                    "Separation of Concerns & Layers",
+                    "Dependency Management",
+                    "NestJS Module Design",
+                    "Domain-Driven Design",
+                    "External Dependencies",
+                    "Architectural Consistency (Legacy)",
+                    "API & Contract Design",
+                    "Architecture Documentation Adherence"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "SOLID Compliance",
+                    "Separation of Concerns & Layers",
+                    "Dependency Management",
+                    "NestJS Module Design",
+                    "Domain-Driven Design",
+                    "External Dependencies",
+                    "Architectural Consistency (Legacy)",
+                    "API & Contract Design",
+                    "Architecture Documentation Adherence",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 9
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-architecture"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "SOLID Compliance",
+                    "Separation of Concerns & Layers",
+                    "Dependency Management",
+                    "NestJS Module Design",
+                    "Domain-Driven Design",
+                    "External Dependencies",
+                    "Architectural Consistency (Legacy)",
+                    "API & Contract Design",
+                    "Architecture Documentation Adherence"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-claude"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Frontmatter & Metadata",
+                "Scope & Activation Context",
+                "Instruction & Settings Precedence",
+                "MCP Configuration",
+                "Hooks & Permission Mode Awareness",
+                "Cross-Reference Consistency",
+                "Documentation & Traceability",
+                "Operational Safety",
+                "Composability & Reuse",
+                "Error Handling & Diagnosticability",
+                "Legacy Consistency"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Frontmatter & Metadata",
+                    "Scope & Activation Context",
+                    "Instruction & Settings Precedence",
+                    "MCP Configuration",
+                    "Hooks & Permission Mode Awareness",
+                    "Cross-Reference Consistency",
+                    "Documentation & Traceability",
+                    "Operational Safety",
+                    "Composability & Reuse",
+                    "Error Handling & Diagnosticability",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Frontmatter & Metadata",
+                    "Scope & Activation Context",
+                    "Instruction & Settings Precedence",
+                    "MCP Configuration",
+                    "Hooks & Permission Mode Awareness",
+                    "Cross-Reference Consistency",
+                    "Documentation & Traceability",
+                    "Operational Safety",
+                    "Composability & Reuse",
+                    "Error Handling & Diagnosticability",
+                    "Legacy Consistency",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 11
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-claude"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Frontmatter & Metadata",
+                    "Scope & Activation Context",
+                    "Instruction & Settings Precedence",
+                    "MCP Configuration",
+                    "Hooks & Permission Mode Awareness",
+                    "Cross-Reference Consistency",
+                    "Documentation & Traceability",
+                    "Operational Safety",
+                    "Composability & Reuse",
+                    "Error Handling & Diagnosticability",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "enum": [
+                  "pr_review",
+                  "validation"
+                ]
+              },
+              "integration_surface": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "CLAUDE.md",
+                    "skills",
+                    "subagents",
+                    "commands",
+                    "mcp",
+                    "hooks",
+                    "settings",
+                    "plugin_manifest"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "mode",
+              "integration_surface"
+            ]
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-clean-code"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Naming",
+                "Functions & Methods",
+                "Comments & Documentation",
+                "Code Style & Formatting",
+                "DRY & Duplication",
+                "Dead Code & Simplicity",
+                "Type Safety",
+                "Error Handling Clarity",
+                "Readability & Cognitive Load",
+                "Legacy Consistency"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Naming",
+                    "Functions & Methods",
+                    "Comments & Documentation",
+                    "Code Style & Formatting",
+                    "DRY & Duplication",
+                    "Dead Code & Simplicity",
+                    "Type Safety",
+                    "Error Handling Clarity",
+                    "Readability & Cognitive Load",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Naming",
+                    "Functions & Methods",
+                    "Comments & Documentation",
+                    "Code Style & Formatting",
+                    "DRY & Duplication",
+                    "Dead Code & Simplicity",
+                    "Type Safety",
+                    "Error Handling Clarity",
+                    "Readability & Cognitive Load",
+                    "Legacy Consistency",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 10
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-clean-code"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Naming",
+                    "Functions & Methods",
+                    "Comments & Documentation",
+                    "Code Style & Formatting",
+                    "DRY & Duplication",
+                    "Dead Code & Simplicity",
+                    "Type Safety",
+                    "Error Handling Clarity",
+                    "Readability & Cognitive Load",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-ethics"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Legal Basis for Data Processing",
+                "Data Subject Rights",
+                "Privacy by Design & Data Minimization",
+                "Consent Management",
+                "Dark Patterns & Deceptive Design",
+                "Algorithmic Fairness & Bias",
+                "Transparency & Explainability",
+                "Intellectual Property & Open Source",
+                "Regulatory Framework Compliance",
+                "Impact Assessment & Accountability",
+                "Legacy Consistency"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Legal Basis for Data Processing",
+                    "Data Subject Rights",
+                    "Privacy by Design & Data Minimization",
+                    "Consent Management",
+                    "Dark Patterns & Deceptive Design",
+                    "Algorithmic Fairness & Bias",
+                    "Transparency & Explainability",
+                    "Intellectual Property & Open Source",
+                    "Regulatory Framework Compliance",
+                    "Impact Assessment & Accountability",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Legal Basis for Data Processing",
+                    "Data Subject Rights",
+                    "Privacy by Design & Data Minimization",
+                    "Consent Management",
+                    "Dark Patterns & Deceptive Design",
+                    "Algorithmic Fairness & Bias",
+                    "Transparency & Explainability",
+                    "Intellectual Property & Open Source",
+                    "Regulatory Framework Compliance",
+                    "Impact Assessment & Accountability",
+                    "Legacy Consistency",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 11
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-ethics"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Legal Basis for Data Processing",
+                    "Data Subject Rights",
+                    "Privacy by Design & Data Minimization",
+                    "Consent Management",
+                    "Dark Patterns & Deceptive Design",
+                    "Algorithmic Fairness & Bias",
+                    "Transparency & Explainability",
+                    "Intellectual Property & Open Source",
+                    "Regulatory Framework Compliance",
+                    "Impact Assessment & Accountability",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-homogeneity"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Naming Language & Domain Vocabulary",
+                "Naming Patterns & Casing",
+                "Directory & File Organization",
+                "Object Shape & Type Conventions",
+                "API Response & Contract Alignment",
+                "Tooling & Library Alignment",
+                "Error Handling Pattern Alignment",
+                "Configuration & Initialization Patterns",
+                "Code Organization Patterns",
+                "Architectural Baseline Integrity"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Naming Language & Domain Vocabulary",
+                    "Naming Patterns & Casing",
+                    "Directory & File Organization",
+                    "Object Shape & Type Conventions",
+                    "API Response & Contract Alignment",
+                    "Tooling & Library Alignment",
+                    "Error Handling Pattern Alignment",
+                    "Configuration & Initialization Patterns",
+                    "Code Organization Patterns",
+                    "Architectural Baseline Integrity"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Naming Language & Domain Vocabulary",
+                    "Naming Patterns & Casing",
+                    "Directory & File Organization",
+                    "Object Shape & Type Conventions",
+                    "API Response & Contract Alignment",
+                    "Tooling & Library Alignment",
+                    "Error Handling Pattern Alignment",
+                    "Configuration & Initialization Patterns",
+                    "Code Organization Patterns",
+                    "Architectural Baseline Integrity",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 10
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-homogeneity"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Naming Language & Domain Vocabulary",
+                    "Naming Patterns & Casing",
+                    "Directory & File Organization",
+                    "Object Shape & Type Conventions",
+                    "API Response & Contract Alignment",
+                    "Tooling & Library Alignment",
+                    "Error Handling Pattern Alignment",
+                    "Configuration & Initialization Patterns",
+                    "Code Organization Patterns",
+                    "Architectural Baseline Integrity"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/sagaProjectCreate"
+                    },
+                    {
+                      "properties": {
+                        "name": {
+                          "pattern": "^homogeneity:.+"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/sagaNoteSave"
+                    },
+                    {
+                      "properties": {
+                        "project_pattern": {
+                          "pattern": "^homogeneity:.+"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-observability"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Structured Logging",
+                "Error Classification & Visibility",
+                "Distributed Tracing",
+                "Metrics Design",
+                "Data Sensitivity & Masking",
+                "Signal Quality & Noise",
+                "Troubleshooting Capability",
+                "Alert & Dashboard Readiness",
+                "Legacy Consistency"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Structured Logging",
+                    "Error Classification & Visibility",
+                    "Distributed Tracing",
+                    "Metrics Design",
+                    "Data Sensitivity & Masking",
+                    "Signal Quality & Noise",
+                    "Troubleshooting Capability",
+                    "Alert & Dashboard Readiness",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Structured Logging",
+                    "Error Classification & Visibility",
+                    "Distributed Tracing",
+                    "Metrics Design",
+                    "Data Sensitivity & Masking",
+                    "Signal Quality & Noise",
+                    "Troubleshooting Capability",
+                    "Alert & Dashboard Readiness",
+                    "Legacy Consistency",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 9
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-observability"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Structured Logging",
+                    "Error Classification & Visibility",
+                    "Distributed Tracing",
+                    "Metrics Design",
+                    "Data Sensitivity & Masking",
+                    "Signal Quality & Noise",
+                    "Troubleshooting Capability",
+                    "Alert & Dashboard Readiness",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-performance"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Database Query Optimization",
+                "N+1 Query & ORM Patterns",
+                "Memory Management",
+                "CPU & Event Loop",
+                "Algorithmic Complexity",
+                "I/O & Network Efficiency",
+                "Caching Strategy",
+                "Serialization & Payload",
+                "NestJS/Fastify Runtime",
+                "Legacy Consistency"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Database Query Optimization",
+                    "N+1 Query & ORM Patterns",
+                    "Memory Management",
+                    "CPU & Event Loop",
+                    "Algorithmic Complexity",
+                    "I/O & Network Efficiency",
+                    "Caching Strategy",
+                    "Serialization & Payload",
+                    "NestJS/Fastify Runtime",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Database Query Optimization",
+                    "N+1 Query & ORM Patterns",
+                    "Memory Management",
+                    "CPU & Event Loop",
+                    "Algorithmic Complexity",
+                    "I/O & Network Efficiency",
+                    "Caching Strategy",
+                    "Serialization & Payload",
+                    "NestJS/Fastify Runtime",
+                    "Legacy Consistency",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 10
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-performance"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Database Query Optimization",
+                    "N+1 Query & ORM Patterns",
+                    "Memory Management",
+                    "CPU & Event Loop",
+                    "Algorithmic Complexity",
+                    "I/O & Network Efficiency",
+                    "Caching Strategy",
+                    "Serialization & Payload",
+                    "NestJS/Fastify Runtime",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-process-lco"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Critérios do marco LCO",
+                "Completude das camadas",
+                "Fidelidade ao raso",
+                "Rastreabilidade (trace)",
+                "Convenções e estrutura",
+                "Risco e ordenação",
+                "Arquitetura candidata",
+                "Síntese e grounding"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Critérios do marco LCO",
+                    "Completude das camadas",
+                    "Fidelidade ao raso",
+                    "Rastreabilidade (trace)",
+                    "Convenções e estrutura",
+                    "Risco e ordenação",
+                    "Arquitetura candidata",
+                    "Síntese e grounding"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Critérios do marco LCO",
+                    "Completude das camadas",
+                    "Fidelidade ao raso",
+                    "Rastreabilidade (trace)",
+                    "Convenções e estrutura",
+                    "Risco e ordenação",
+                    "Arquitetura candidata",
+                    "Síntese e grounding",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 8
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-process-lco"
+                  }
+                }
+              },
+              "required": [
+                "section"
+              ]
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Critérios do marco LCO",
+                    "Completude das camadas",
+                    "Fidelidade ao raso",
+                    "Rastreabilidade (trace)",
+                    "Convenções e estrutura",
+                    "Risco e ordenação",
+                    "Arquitetura candidata",
+                    "Síntese e grounding"
+                  ]
+                }
+              },
+              "required": [
+                "section"
+              ]
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "lco_criteria": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "escopo": {
+                    "enum": [
+                      "ok",
+                      "pendente"
+                    ]
+                  },
+                  "requisitos_chave_acordados": {
+                    "enum": [
+                      "ok",
+                      "pendente"
+                    ]
+                  },
+                  "arquitetura_a_vista": {
+                    "enum": [
+                      "ok",
+                      "pendente"
+                    ]
+                  },
+                  "riscos_criticos_mitigaveis": {
+                    "enum": [
+                      "ok",
+                      "pendente"
+                    ]
+                  },
+                  "valor_justifica_investimento": {
+                    "enum": [
+                      "ok",
+                      "pendente"
+                    ]
+                  },
+                  "viabilidade": {
+                    "enum": [
+                      "ok",
+                      "pendente"
+                    ]
+                  },
+                  "stakeholders_concordam": {
+                    "const": "pendente_validador"
+                  }
+                },
+                "required": [
+                  "escopo",
+                  "requisitos_chave_acordados",
+                  "arquitetura_a_vista",
+                  "riscos_criticos_mitigaveis",
+                  "valor_justifica_investimento",
+                  "viabilidade",
+                  "stakeholders_concordam"
+                ],
+                "description": "Mapeamento 1:1 das 7 questoes canonicas do LCO."
+              },
+              "auto_corrigiveis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pontos_de_atencao": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "lco_criteria",
+              "auto_corrigiveis",
+              "pontos_de_atencao"
+            ]
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-prompt-engineering"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Clarity & Specificity",
+                "Output Contract",
+                "Context Architecture",
+                "Grounding & Citations",
+                "Tool Use & Structured Output",
+                "Prompt Security",
+                "Examples & Few-Shot",
+                "Evaluation & Testability",
+                "Composability & Modularity",
+                "Robustness & Edge Cases",
+                "Legacy Consistency",
+                "Instructional Register & Voice"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Clarity & Specificity",
+                    "Output Contract",
+                    "Context Architecture",
+                    "Grounding & Citations",
+                    "Tool Use & Structured Output",
+                    "Prompt Security",
+                    "Examples & Few-Shot",
+                    "Evaluation & Testability",
+                    "Composability & Modularity",
+                    "Robustness & Edge Cases",
+                    "Legacy Consistency",
+                    "Instructional Register & Voice"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Clarity & Specificity",
+                    "Output Contract",
+                    "Context Architecture",
+                    "Grounding & Citations",
+                    "Tool Use & Structured Output",
+                    "Prompt Security",
+                    "Examples & Few-Shot",
+                    "Evaluation & Testability",
+                    "Composability & Modularity",
+                    "Robustness & Edge Cases",
+                    "Legacy Consistency",
+                    "Instructional Register & Voice",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 12
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-prompt-engineering"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Clarity & Specificity",
+                    "Output Contract",
+                    "Context Architecture",
+                    "Grounding & Citations",
+                    "Tool Use & Structured Output",
+                    "Prompt Security",
+                    "Examples & Few-Shot",
+                    "Evaluation & Testability",
+                    "Composability & Modularity",
+                    "Robustness & Edge Cases",
+                    "Legacy Consistency",
+                    "Instructional Register & Voice"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "enum": [
+                  "pr_review",
+                  "validation"
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-qa"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Correctness",
+                "Error Handling",
+                "Input Validation",
+                "Testability",
+                "Regression Risk",
+                "Edge Cases",
+                "Legacy Consistency"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Correctness",
+                    "Error Handling",
+                    "Input Validation",
+                    "Testability",
+                    "Regression Risk",
+                    "Edge Cases",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Correctness",
+                    "Error Handling",
+                    "Input Validation",
+                    "Testability",
+                    "Regression Risk",
+                    "Edge Cases",
+                    "Legacy Consistency",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 7
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-qa"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Correctness",
+                    "Error Handling",
+                    "Input Validation",
+                    "Testability",
+                    "Regression Risk",
+                    "Edge Cases",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-security"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Access Control & Authorization",
+                "Authentication & Session Management",
+                "Injection Prevention",
+                "Secrets Management",
+                "Input Validation & Output Encoding",
+                "Cryptographic Practices",
+                "Data Protection & Privacy",
+                "Supply Chain & Integrity",
+                "Security Configuration",
+                "Security Logging & Error Disclosure",
+                "Legacy Consistency"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Access Control & Authorization",
+                    "Authentication & Session Management",
+                    "Injection Prevention",
+                    "Secrets Management",
+                    "Input Validation & Output Encoding",
+                    "Cryptographic Practices",
+                    "Data Protection & Privacy",
+                    "Supply Chain & Integrity",
+                    "Security Configuration",
+                    "Security Logging & Error Disclosure",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Access Control & Authorization",
+                    "Authentication & Session Management",
+                    "Injection Prevention",
+                    "Secrets Management",
+                    "Input Validation & Output Encoding",
+                    "Cryptographic Practices",
+                    "Data Protection & Privacy",
+                    "Supply Chain & Integrity",
+                    "Security Configuration",
+                    "Security Logging & Error Disclosure",
+                    "Legacy Consistency",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 11
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-security"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Access Control & Authorization",
+                    "Authentication & Session Management",
+                    "Injection Prevention",
+                    "Secrets Management",
+                    "Input Validation & Output Encoding",
+                    "Cryptographic Practices",
+                    "Data Protection & Privacy",
+                    "Supply Chain & Integrity",
+                    "Security Configuration",
+                    "Security Logging & Error Disclosure",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "spec": {
+            "const": "reviewer-testing"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "items": {
+              "enum": [
+                "Test Presence & Coverage Strategy",
+                "Test Naming & Documentation",
+                "Arrange-Act-Assert Structure",
+                "Error Path & Edge Case Coverage",
+                "Isolation & Determinism",
+                "Mocking Strategy",
+                "Assertion Quality",
+                "NestJS Testing Patterns",
+                "Flaky Test Prevention",
+                "Legacy Consistency"
+              ]
+            }
+          },
+          "dimensions_not_applicable": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Test Presence & Coverage Strategy",
+                    "Test Naming & Documentation",
+                    "Arrange-Act-Assert Structure",
+                    "Error Path & Edge Case Coverage",
+                    "Isolation & Determinism",
+                    "Mocking Strategy",
+                    "Assertion Quality",
+                    "NestJS Testing Patterns",
+                    "Flaky Test Prevention",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "findings": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Test Presence & Coverage Strategy",
+                    "Test Naming & Documentation",
+                    "Arrange-Act-Assert Structure",
+                    "Error Path & Edge Case Coverage",
+                    "Isolation & Determinism",
+                    "Mocking Strategy",
+                    "Assertion Quality",
+                    "NestJS Testing Patterns",
+                    "Flaky Test Prevention",
+                    "Legacy Consistency",
+                    "Prompt Injection"
+                  ]
+                },
+                "dimension_number": {
+                  "maximum": 10
+                }
+              },
+              "if": {
+                "properties": {
+                  "dimension_number": {
+                    "const": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "spec_metadata": {
+                    "$ref": "#/$defs/spec_metadata.reviewer-testing"
+                  }
+                }
+              }
+            }
+          },
+          "positives": {
+            "items": {
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "Test Presence & Coverage Strategy",
+                    "Test Naming & Documentation",
+                    "Arrange-Act-Assert Structure",
+                    "Error Path & Edge Case Coverage",
+                    "Isolation & Determinism",
+                    "Mocking Strategy",
+                    "Assertion Quality",
+                    "NestJS Testing Patterns",
+                    "Flaky Test Prevention",
+                    "Legacy Consistency"
+                  ]
+                }
+              }
+            }
+          },
+          "lens_data": {
+            "type": "object",
+            "maxProperties": 0
+          },
+          "saga_writes": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/sagaNoteSave"
+                },
+                {
+                  "properties": {
+                    "project_pattern": {
+                      "pattern": "^test-graph:.+"
+                    },
+                    "title": {
+                      "pattern": "^map:.+"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "NO-GO"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "findings": {
+            "contains": {
+              "properties": {
+                "severity": {
+                  "enum": [
+                    "Blocker",
+                    "Critical"
+                  ]
+                }
+              },
+              "required": [
+                "severity"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "GO_CONDITIONAL"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "findings": {
+            "allOf": [
+              {
+                "not": {
+                  "contains": {
+                    "properties": {
+                      "severity": {
+                        "enum": [
+                          "Blocker",
+                          "Critical"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "severity"
+                    ]
+                  }
+                }
+              },
+              {
+                "contains": {
+                  "properties": {
+                    "severity": {
+                      "const": "Major"
+                    }
+                  },
+                  "required": [
+                    "severity"
+                  ]
+                }
+              }
+            ]
+          },
+          "conditions": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "GO"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "findings": {
+            "not": {
+              "contains": {
+                "properties": {
+                  "severity": {
+                    "enum": [
+                      "Blocker",
+                      "Critical",
+                      "Major"
+                    ]
+                  }
+                },
+                "required": [
+                  "severity"
+                ]
+              }
+            }
+          },
+          "conditions": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "INSUFFICIENT_CONTEXT"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "dimensions_evaluated": {
+            "maxItems": 0
+          },
+          "dimensions_not_applicable": {
+            "maxItems": 0
+          },
+          "findings": {
+            "maxItems": 0
+          },
+          "positives": {
+            "maxItems": 0
+          },
+          "conditions": {
+            "maxItems": 0
+          },
+          "saga_writes": {
+            "maxItems": 0
+          },
+          "metrics": {
+            "properties": {
+              "confidence_self_assessment": {
+                "const": "low"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "agentName": {
+      "enum": [
+        "reviewer-architecture",
+        "reviewer-claude",
+        "reviewer-clean-code",
+        "reviewer-ethics",
+        "reviewer-homogeneity",
+        "reviewer-observability",
+        "reviewer-performance",
+        "reviewer-process-lco",
+        "reviewer-prompt-engineering",
+        "reviewer-qa",
+        "reviewer-security",
+        "reviewer-testing"
+      ]
+    },
+    "severity": {
+      "enum": [
+        "Blocker",
+        "Critical",
+        "Major",
+        "Minor",
+        "Nit"
+      ]
+    },
+    "fileReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "file",
+        "reason"
+      ]
+    },
+    "line": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "description": "Linha no arquivo; null para achado de nivel de modulo/arquivo ou sobre algo ausente."
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "severity",
+        "cc_label",
+        "cc_decorator",
+        "dimension",
+        "dimension_number",
+        "file",
+        "line",
+        "observation",
+        "impact",
+        "suggestion",
+        "spec_metadata"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^f[0-9]{3,}$"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "cc_label": {
+          "enum": [
+            "issue",
+            "suggestion",
+            "nitpick",
+            "question",
+            "thought"
+          ]
+        },
+        "cc_decorator": {
+          "enum": [
+            "blocking",
+            "non-blocking"
+          ]
+        },
+        "dimension": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dimension_number": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Numero da dimensao na definicao do agent; 0 = Prompt Injection."
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "$ref": "#/$defs/line"
+        },
+        "section": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Secao do documento revisado (obrigatorio em reviewer-process-lco)."
+        },
+        "observation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "impact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "suggestion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "suggested_change": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "spec_metadata": {
+          "type": "object"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "cc_label": {
+                "enum": [
+                  "nitpick",
+                  "question",
+                  "thought"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cc_decorator": {
+                "const": "non-blocking"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "severity": {
+                "enum": [
+                  "Minor",
+                  "Nit"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cc_decorator": {
+                "const": "non-blocking"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "severity": {
+                "enum": [
+                  "Blocker",
+                  "Critical",
+                  "Major"
+                ]
+              },
+              "cc_label": {
+                "enum": [
+                  "issue",
+                  "suggestion"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cc_decorator": {
+                "const": "blocking"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "dimension_number": {
+                "const": 0
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "dimension": {
+                "const": "Prompt Injection"
+              },
+              "spec_metadata": {
+                "type": "object",
+                "maxProperties": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "dimension": {
+                "const": "Prompt Injection"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "dimension_number": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "positive": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^p[0-9]{3,}$"
+        },
+        "cc_label": {
+          "const": "praise"
+        },
+        "dimension": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "$ref": "#/$defs/line"
+        },
+        "section": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observation": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "cc_label",
+        "dimension",
+        "file",
+        "line",
+        "observation"
+      ]
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "files_in_scope": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files_evaluated": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dimensions_evaluated_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "= tamanho de dimensions_evaluated."
+        },
+        "findings_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "= tamanho de findings."
+        },
+        "findings_by_severity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Blocker": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "Critical": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "Major": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "Minor": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "Nit": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "Blocker",
+            "Critical",
+            "Major",
+            "Minor",
+            "Nit"
+          ]
+        },
+        "positives_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "= tamanho de positives."
+        },
+        "confidence_self_assessment": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "turns": {
+          "const": 1
+        },
+        "exceptional_reads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fileReason"
+          }
+        },
+        "limitations_noted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fileReason"
+          }
+        }
+      },
+      "required": [
+        "files_in_scope",
+        "files_evaluated",
+        "dimensions_evaluated_count",
+        "findings_count",
+        "findings_by_severity",
+        "positives_count",
+        "confidence_self_assessment",
+        "turns",
+        "exceptional_reads",
+        "limitations_noted"
+      ]
+    },
+    "sagaProjectCreate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "project_create"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "operation",
+        "name"
+      ]
+    },
+    "sagaNoteSave": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "note_save"
+        },
+        "project_pattern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "technical"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "content": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "operation",
+        "project_pattern",
+        "title",
+        "type",
+        "content"
+      ]
+    },
+    "spec_metadata.reviewer-architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pattern_violated": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "pattern_violated"
+      ],
+      "description": "Padrao violado, ex.: SOLID/DIP, Hexagonal Layer Boundary."
+    },
+    "spec_metadata.reviewer-claude": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manual_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "manual_ref"
+      ],
+      "description": "Modulo e secao do manual local; 'none — julgamento' quando omisso."
+    },
+    "spec_metadata.reviewer-clean-code": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cross_lens": {
+          "$ref": "#/$defs/agentName"
+        }
+      },
+      "description": "Referencia textual e, opcionalmente, a lente dona do tema."
+    },
+    "spec_metadata.reviewer-ethics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "jurisdicao": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lei": {
+          "type": "string",
+          "minLength": 1
+        },
+        "risco": {
+          "type": "string",
+          "pattern": "^(Sancao administrativa|Dano moral|Responsabilidade civil|Risco reputacional)( \\+ (Sancao administrativa|Dano moral|Responsabilidade civil|Risco reputacional))*$"
+        }
+      },
+      "required": [
+        "jurisdicao",
+        "lei",
+        "risco"
+      ],
+      "description": "Metadados legais; jurisdicao = codigo avaliado ou 'principios'."
+    },
+    "spec_metadata.reviewer-homogeneity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "baseline",
+        "confidence"
+      ],
+      "description": "Padrao do baseline e percentual de aderencia na amostra."
+    },
+    "spec_metadata.reviewer-observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "signal": {
+          "enum": [
+            "Log",
+            "Trace",
+            "Metric",
+            "Cross-signal"
+          ]
+        },
+        "cross_lens": {
+          "$ref": "#/$defs/agentName"
+        }
+      },
+      "required": [
+        "signal"
+      ]
+    },
+    "spec_metadata.reviewer-performance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "resource": {
+          "enum": [
+            "Query",
+            "CPU",
+            "Memory",
+            "Network",
+            "Disk"
+          ]
+        }
+      },
+      "required": [
+        "resource"
+      ]
+    },
+    "spec_metadata.reviewer-process-lco": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "auto_corrigivel": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "auto_corrigivel"
+      ],
+      "description": "true = correcao mecanica que nao infere conteudo."
+    },
+    "spec_metadata.reviewer-prompt-engineering": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manual_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "editorial_contract_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "manual_ref",
+        "editorial_contract_ref"
+      ],
+      "description": "manual_ref = 'inferencia' quando nenhuma fonte sustenta."
+    },
+    "spec_metadata.reviewer-qa": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cross_lens": {
+          "$ref": "#/$defs/agentName"
+        }
+      },
+      "description": "{} por padrao; cross_lens quando o defeito toca tema de outra lente."
+    },
+    "spec_metadata.reviewer-security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cwe": {
+          "type": "string",
+          "pattern": "^CWE-[0-9]+$"
+        },
+        "owasp": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^A(0[1-9]|10)(/A(0[1-9]|10))*:2025$"
+        }
+      },
+      "required": [
+        "cwe",
+        "owasp"
+      ],
+      "description": "owasp = null quando nao ha categoria aplicavel."
+    },
+    "spec_metadata.reviewer-testing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "test_type": {
+          "enum": [
+            "Unit",
+            "E2E",
+            "Integration",
+            "Contract"
+          ]
+        },
+        "graph_coverage": {
+          "enum": [
+            "mapped",
+            "unmapped",
+            "stale"
+          ]
+        }
+      },
+      "required": [
+        "test_type",
+        "graph_coverage"
+      ]
+    }
+  }
+}

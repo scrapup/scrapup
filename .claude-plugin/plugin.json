@@ -12,6 +12,20 @@
   "skills": [
     "./skills"
   ],
+  "agents": [
+    "./agents/reviewer-architecture.md",
+    "./agents/reviewer-claude.md",
+    "./agents/reviewer-clean-code.md",
+    "./agents/reviewer-ethics.md",
+    "./agents/reviewer-homogeneity.md",
+    "./agents/reviewer-observability.md",
+    "./agents/reviewer-performance.md",
+    "./agents/reviewer-process-lco.md",
+    "./agents/reviewer-prompt-engineering.md",
+    "./agents/reviewer-qa.md",
+    "./agents/reviewer-security.md",
+    "./agents/reviewer-testing.md"
+  ],
   "keywords": [
     "unified-process",
     "sdd",
