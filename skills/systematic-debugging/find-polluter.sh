@@ -5,7 +5,7 @@
 
 set -e
 
-if [ $# -ne 2 ]; then
+if [[ $# -ne 2 ]]; then
   echo "Usage: $0 <file_to_check> <test_pattern>"
   echo "Example: $0 '.git' 'src/**/*.test.ts'"
   exit 1
@@ -30,7 +30,7 @@ for TEST_FILE in $TEST_FILES; do
   COUNT=$((COUNT + 1))
 
   # Skip if pollution already exists
-  if [ -e "$POLLUTION_CHECK" ]; then
+  if [[ -e "$POLLUTION_CHECK" ]]; then
     echo "WARNING: Pollution already exists before test $COUNT/$TOTAL"
     echo "   Skipping: $TEST_FILE"
     continue
@@ -42,7 +42,7 @@ for TEST_FILE in $TEST_FILES; do
   npm test "$TEST_FILE" > /dev/null 2>&1 || true
 
   # Check if pollution appeared
-  if [ -e "$POLLUTION_CHECK" ]; then
+  if [[ -e "$POLLUTION_CHECK" ]]; then
     echo ""
     echo "FOUND POLLUTER!"
     echo "   Test: $TEST_FILE"

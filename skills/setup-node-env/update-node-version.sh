@@ -25,7 +25,7 @@ IMAGE_VERSION="${NEW_VERSION#v}"
 updated=0
 
 nvmrc="${PROJECT_DIR}/.nvmrc"
-if [ -f "$nvmrc" ]; then
+if [[ -f "$nvmrc" ]]; then
   echo "$NEW_VERSION" > "$nvmrc"
   echo "UPDATED=nvmrc"
   updated=1
@@ -33,7 +33,7 @@ fi
 
 for name in Dockerfile Dockerfile.prod Dockerfile.deploy Dockerfile.production; do
   dockerfile="${PROJECT_DIR}/${name}"
-  if [ -f "$dockerfile" ] && grep -qiE '^FROM[[:space:]]+node:[0-9]' "$dockerfile"; then
+  if [[ -f "$dockerfile" ]] && grep -qiE '^FROM[[:space:]]+node:[0-9]' "$dockerfile"; then
     sed -i.bak -E "s/^([Ff][Rr][Oo][Mm][[:space:]]+node:)[0-9]+(\.[0-9]+)*/\1${IMAGE_VERSION}/" "$dockerfile" \
       && rm -f "${dockerfile}.bak"
     echo "UPDATED=dockerfile:${dockerfile}"
@@ -41,13 +41,13 @@ for name in Dockerfile Dockerfile.prod Dockerfile.deploy Dockerfile.production; 
   fi
 done
 
-if [ "$updated" -eq 0 ]; then
+if [[ "$updated" -eq 0 ]]; then
   echo "NO_FILES_UPDATED=true"
   exit 2
 fi
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
   echo "NVM_STATUS=not_found"
   exit 3
 fi

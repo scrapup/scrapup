@@ -9,7 +9,7 @@ set -euo pipefail
 #   0 — NPM_TOKEN is set
 #   1 — NPM_TOKEN is missing
 
-if [ -n "${NPM_TOKEN:-}" ]; then
+if [[ -n "${NPM_TOKEN:-}" ]]; then
   echo "NPM_TOKEN_STATUS=available"
   exit 0
 fi

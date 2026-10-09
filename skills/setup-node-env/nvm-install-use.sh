@@ -15,7 +15,7 @@ PROJECT_DIR="${1:-.}"
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 
-if [ -s "$NVM_DIR/nvm.sh" ]; then
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
   # shellcheck source=/dev/null
   . "$NVM_DIR/nvm.sh"
 else
@@ -23,7 +23,7 @@ else
   exit 1
 fi
 
-if [ ! -f "${PROJECT_DIR}/.nvmrc" ]; then
+if [[ ! -f "${PROJECT_DIR}/.nvmrc" ]]; then
   echo "NVM_STATUS=no_nvmrc"
   exit 2
 fi

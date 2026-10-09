@@ -17,19 +17,19 @@ PROJECT_DIR="${1:-.}"
 
 dockerfile=""
 for name in Dockerfile Dockerfile.prod Dockerfile.deploy Dockerfile.production; do
-  if [ -f "${PROJECT_DIR}/${name}" ]; then
+  if [[ -f "${PROJECT_DIR}/${name}" ]]; then
     dockerfile="${PROJECT_DIR}/${name}"
     break
   fi
 done
 
-if [ -z "$dockerfile" ]; then
+if [[ -z "$dockerfile" ]]; then
   echo "DOCKER_BUILD_STATUS=no_dockerfile"
   exit 1
 fi
 
 secret_args=()
-if [ -n "${NPM_TOKEN:-}" ]; then
+if [[ -n "${NPM_TOKEN:-}" ]]; then
   secret_args=(--secret "id=npm_token,env=NPM_TOKEN")
 elif grep -qE 'id=npm_token' "$dockerfile"; then
   echo "DOCKER_BUILD_STATUS=no_npm_token"

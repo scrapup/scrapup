@@ -27,10 +27,10 @@ fi
 export NPM_TOKEN="${NPM_TOKEN:-}"
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
   # shellcheck source=/dev/null
   . "$NVM_DIR/nvm.sh"
-  if [ -f .nvmrc ]; then
+  if [[ -f .nvmrc ]]; then
     nvm use >/dev/null 2>&1 || true
   fi
 fi
@@ -38,7 +38,7 @@ fi
 output=$(npm install 2>&1)
 exit_code=$?
 
-if [ "$exit_code" -eq 0 ]; then
+if [[ "$exit_code" -eq 0 ]]; then
   echo "NPM_INSTALL_STATUS=ok"
   exit 0
 fi

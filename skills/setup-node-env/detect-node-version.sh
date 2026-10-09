@@ -15,7 +15,7 @@ set -euo pipefail
 
 PROJECT_DIR="${1:-.}"
 
-if [ -f "${PROJECT_DIR}/.nvmrc" ]; then
+if [[ -f "${PROJECT_DIR}/.nvmrc" ]]; then
   version=$(tr -d '[:space:]' < "${PROJECT_DIR}/.nvmrc")
   echo "NODE_VERSION=${version}"
   echo "SOURCE=nvmrc"
@@ -24,13 +24,13 @@ fi
 
 dockerfile=""
 for name in Dockerfile Dockerfile.prod Dockerfile.deploy Dockerfile.production; do
-  if [ -f "${PROJECT_DIR}/${name}" ]; then
+  if [[ -f "${PROJECT_DIR}/${name}" ]]; then
     dockerfile="${PROJECT_DIR}/${name}"
     break
   fi
 done
 
-if [ -z "$dockerfile" ]; then
+if [[ -z "$dockerfile" ]]; then
   echo "SOURCE=none"
   exit 1
 fi
@@ -39,7 +39,7 @@ echo "DOCKERFILE=${dockerfile}"
 
 version=$(grep -iE '^FROM[[:space:]]+node:[0-9]' "$dockerfile" | head -1 | sed -E 's/^[Ff][Rr][Oo][Mm][[:space:]]+node:([0-9]+(\.[0-9]+)*).*/\1/' || true)
 
-if [ -z "$version" ]; then
+if [[ -z "$version" ]]; then
   echo "SOURCE=dockerfile"
   exit 2
 fi
